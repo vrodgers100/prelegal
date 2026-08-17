@@ -1,0 +1,276 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------------------------------------------
+   App shell
+   --------------------------------------------------------------------------- */
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+}
+
+/* ---------------------------------------------------------------------------
+   The agreement
+   A generated legal document should look like paper, so the document surface
+   keeps its light palette in dark mode and in print.
+   --------------------------------------------------------------------------- */
+
+.doc-page {
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.06);
+  padding: clamp(1.75rem, 5vw, 4rem);
+}
+
+.doc {
+  font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  max-width: 46rem;
+  margin-inline: auto;
+}
+
+.doc h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+  margin-bottom: 1.75rem;
+}
+
+.doc h2 {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+
+.doc h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.doc p {
+  margin-bottom: 0.9rem;
+}
+
+.doc section {
+  margin-bottom: 1.5rem;
+}
+
+.doc a {
+  color: #1d4fd8;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.doc strong {
+  font-weight: 700;
+}
+
+/* A value the user supplied. */
+.doc-value {
+  white-space: pre-line;
+}
+
+/* An unanswered fill-in slot, shown as the template's bracketed prompt. */
+.doc-placeholder {
+  color: #92400d;
+  background: #fef3c6;
+  border-radius: 0.1875rem;
+  padding: 0 0.25rem;
+  font-style: italic;
+}
+
+/* The small grey guidance notes printed beside fields on the cover page. */
+.doc-field-note {
+  display: block;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 400;
+  line-height: 1.4;
+  color: #64748b;
+  margin-bottom: 0.35rem;
+}
+
+/* Checkbox term options. */
+.doc-options {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.doc-option {
+  display: flex;
+  gap: 0.625rem;
+  align-items: baseline;
+  margin-bottom: 0.4rem;
+}
+
+.doc-checkbox {
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.doc-attestation {
+  margin-top: 2rem;
+}
+
+/* Signature block. */
+.doc-signatures {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1.75rem;
+  font-size: 0.875rem;
+}
+
+.doc-signatures th,
+.doc-signatures td {
+  border: 1px solid #cbd5e2;
+  padding: 0.55rem 0.7rem;
+  text-align: left;
+  vertical-align: top;
+  width: 33.33%;
+}
+
+.doc-signatures thead th {
+  background: #f8fafc;
+  font-weight: 700;
+}
+
+.doc-signatures tbody th {
+  font-weight: 600;
+  background: #f8fafc;
+}
+
+.doc-signatures td {
+  white-space: pre-line;
+}
+
+/* Rows the parties complete when signing. */
+.doc-signature-blank {
+  height: 2.75rem;
+}
+
+.doc-attribution {
+  font-size: 0.75rem;
+  color: #64748b;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 0.75rem;
+}
+
+/* ---------------------------------------------------------------------------
+   Standard Terms (rendered from templates/mutual-nda.md)
+   --------------------------------------------------------------------------- */
+
+.doc-standard-terms ol {
+  list-style: decimal;
+  padding-left: 1.6rem;
+}
+
+.doc-standard-terms li {
+  margin-bottom: 0.9rem;
+  padding-left: 0.2rem;
+}
+
+/* Markdown wraps each clause in a paragraph; the list item owns the spacing. */
+.doc-standard-terms li > p:only-child {
+  margin-bottom: 0;
+}
+
+.doc-standard-terms > p:last-child {
+  font-size: 0.75rem;
+  color: #64748b;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+/* Cross-references to fields on the cover page. */
+.coverpage_link {
+  font-style: italic;
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------------------
+   Print — the download path. Everything but the document is hidden, and the
+   Standard Terms start on a fresh page.
+   --------------------------------------------------------------------------- */
+
+@page {
+  margin: 0.85in;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  html,
+  body,
+  .app-shell {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  main {
+    display: block !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    gap: 0 !important;
+  }
+
+  .doc-page + .doc-page {
+    margin-top: 0 !important;
+  }
+
+  .doc-page {
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+
+  .doc {
+    max-width: none;
+    font-size: 10.5pt;
+  }
+
+  .doc a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .doc-page-break {
+    break-before: page;
+  }
+
+  .doc h1,
+  .doc h2,
+  .doc h3 {
+    break-after: avoid;
+  }
+
+  .doc-signatures,
+  .doc-option {
+    break-inside: avoid;
+  }
+
+  .doc-placeholder {
+    background: transparent;
+    color: #000000;
+  }
+}
