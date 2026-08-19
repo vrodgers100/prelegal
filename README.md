@@ -11,12 +11,28 @@ any email is accepted and no password is checked.
 
 ## Getting started
 
-Requires Docker.
+Requires Docker. Run the script for your shell -- the `.ps1` scripts are
+PowerShell and the `.sh` scripts are Bash, so each needs its own.
+
+macOS and Linux, in a terminal:
 
 ```bash
-scripts/start-mac.sh       # macOS
-scripts/start-linux.sh     # Linux
-scripts/start-windows.ps1  # Windows
+./scripts/start-mac.sh     # macOS
+./scripts/start-linux.sh   # Linux
+```
+
+Windows, in PowerShell:
+
+```powershell
+.\scripts\start-windows.ps1
+```
+
+Windows, in Git Bash -- either hand the script to PowerShell, or just use the
+Linux one, which works there too:
+
+```bash
+powershell -File scripts/start-windows.ps1
+./scripts/start-linux.sh
 ```
 
 Then open <http://localhost:8000>. Use the matching `stop-*` script to shut down.
