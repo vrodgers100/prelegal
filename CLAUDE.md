@@ -22,10 +22,15 @@ When writing code to make calls to LLMs, communicate via OpenRouter to the gpt-o
 
 There is an OPENROUTER_API_KEY in the .env file in the project root. `docker-compose.yml` passes it in; without it `/api/chat` answers 503 and the form still works.
 
-Two hard-won constraints, both measured (see `backend/src/prelegal/chat.py`):
+Note there is no `:free` tier for `openai/gpt-oss-120b` — only the 20b model has one. Calls cost roughly $0.03 per million prompt tokens, so "any free provider" is read as "let OpenRouter pick", not "must cost nothing".
 
-- **One call cannot both talk and extract.** Asking a single strict-schema call for `{reply, updates}` returned replies like `"updates"` or `""` about three times in four — the model emits the fields first, and constrained decoding had already committed it to the prose. A turn is two calls: extract, then reply.
-- **Route around Novita, and sort by throughput.** Novita answers structured requests for this model with null content (0 usable in 3, against 21 in 21 elsewhere). Throughput sorting halved a turn from 12.2s to 6.2s.  
+Three hard-won constraints, all measured (see `backend/src/prelegal/chat.py`):
+
+- **One call cannot both talk and extract.** Asking a single strict-schema call for `{reply, updates}` returned replies like `"updates"` or `""` about three times in four — the model emits the fields first, and constrained decoding had already committed it to the prose. A turn is two calls: extract, then reply, in that order so the reply knows what was just found.
+- **Route around Novita, and sort by throughput.** Novita answers structured requests for this model with null content (0 usable in 3, against 21 in 21 elsewhere). Throughput sorting halved a turn from 12.2s to 6.2s.
+- **Strict mode needs the schema tightened.** `strict_schema` in `nda.py` forces every property into `required` and closes every object, because Pydantic omits both for optional fields. Optional survives as required-but-nullable.
+
+Overridable by environment, all with working defaults: `OPENROUTER_MODEL`, `OPENROUTER_TIMEOUT`, `OPENROUTER_IGNORED_PROVIDERS`.
 
 ## Technical Design
 The entire project should be packaged into a Docker container.  
@@ -62,7 +67,7 @@ The palette is defined as Tailwind tokens (`brand-navy`, `brand-blue`, `brand-pu
 
 ## Current State
 
-Implemented as of PL-4 (19 August 2026).
+Implemented as of PL-5 (19 August 2026).
 
 **Structure**
 
@@ -72,6 +77,8 @@ Implemented as of PL-4 (19 August 2026).
 | `frontend/` | Next.js 16 / React 19, statically exported. |
 | `templates/` | Common Paper templates. The only source of agreement wording. |
 | `scripts/` | Docker start/stop wrappers per platform. |
+
+The chat feature spans five files worth knowing about: `backend/src/prelegal/openrouter.py` (the only place that talks to the network), `chat.py` (prompts and the two-call turn), `nda.py` (the Pydantic mirror of `NdaData`, which doubles as the structured-output schema), `routers/chat.py`, and `frontend/src/lib/chat.ts` (the merge). Adding a cover-page field means touching `frontend/src/lib/nda.ts` **and** `nda.py` — the schema has to be declared server-side, so the shape genuinely lives in two places.
 
 **Routes**
 
@@ -83,7 +90,11 @@ Implemented as of PL-4 (19 August 2026).
 
 **Database** is dropped and recreated on every startup by the lifespan handler in `main.py`. Do not put anything in it that needs to survive a restart. Plain stdlib `sqlite3`, no ORM.
 
-**The drafting chat** (`/api/chat`) is stateless. The browser owns the agreement and sends the transcript plus the current fields every turn; the reply carries only the fields that turn learned, and `applyUpdates` in `frontend/src/lib/chat.ts` merges them. That is deliberate: a reply can then never overwrite a field edited in the form while the message was in flight. `applyUpdates` also drops values the model gets wrong — a `governingLaw` that is not a US state is discarded rather than written into the document.
+**The creator is chat-first.** `/app` opens on the conversation, with the old form folded into a collapsed "Review fields" panel beneath it. The form is not legacy — it is how a mishearing gets corrected without arguing with the assistant, and it is what keeps the page usable when there is no API key. Both write to the same `NdaData` in `NdaCreator`.
+
+**The drafting chat** (`/api/chat`) is stateless. The browser owns the agreement and sends the transcript plus the current fields every turn; the reply carries only the fields that turn learned, and `applyUpdates` in `frontend/src/lib/chat.ts` merges them. That is deliberate: a reply can then never overwrite a field edited in the form while the message was in flight. `applyUpdates` also drops values the model gets wrong — a `governingLaw` that is not a US state is discarded rather than written into the document, which is how an observed "Delphi" for Delaware stayed out.
+
+Two behaviours to expect rather than treat as bugs: a turn takes roughly 5–7 seconds with no streaming, and the assistant still paraphrases its way into re-asking a settled field about one turn in eight.
 
 **Tests**: `cd backend && uv run pytest` (50), `cd frontend && npm test` (63). Run `npm run lint` too — it catches React issues the build does not.
 
@@ -93,5 +104,7 @@ Implemented as of PL-4 (19 August 2026).
 - `.ps1` scripts need PowerShell, `.sh` need Bash. In Git Bash on Windows, `./scripts/start-linux.sh` works fine.
 - Windows PowerShell 5.1 turns native stderr into terminating errors, so the `.ps1` scripts check `$LASTEXITCODE` instead of setting `$ErrorActionPreference = "Stop"`. Keep it that way — `docker compose` writes progress to stderr.
 - `.gitattributes` pins `.sh` to LF. A CR would break the shebang on mac and Linux.
+- Async backend tests need `@pytest.mark.anyio`; the `anyio_backend` fixture that makes it work lives in `backend/tests/conftest.py`. There is no pytest-asyncio.
+- `httpx2` is the HTTP client, and the import name is `httpx2`, not `httpx`. It is a runtime dependency now, not just a test one.
 
 **Not built yet**: all templates other than the Mutual NDA, real authentication, and persistence. The conversation itself is not persisted either — a reload starts a fresh chat, though the document is equally lost, so the two agree.
