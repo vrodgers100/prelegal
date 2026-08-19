@@ -1,0 +1,26 @@
+[project]
+name = "prelegal"
+version = "0.1.0"
+description = "Prelegal backend: API and static frontend host"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.141.1",
+    "uvicorn[standard]>=0.52.4",
+    "pydantic[email]>=2.13.4",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "httpx2>=2.12.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/prelegal"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
