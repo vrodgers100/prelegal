@@ -18,10 +18,12 @@ export interface Party {
 }
 
 /** How long the MNDA itself stays in force. */
-export type MndaTermKind = "expires" | "untilTerminated";
+export const MNDA_TERM_KINDS = ["expires", "untilTerminated"] as const;
+export type MndaTermKind = (typeof MNDA_TERM_KINDS)[number];
 
 /** How long confidentiality obligations survive. */
-export type ConfidentialityTermKind = "years" | "perpetual";
+export const CONFIDENTIALITY_TERM_KINDS = ["years", "perpetual"] as const;
+export type ConfidentialityTermKind = (typeof CONFIDENTIALITY_TERM_KINDS)[number];
 
 export interface NdaData {
   purpose: string;

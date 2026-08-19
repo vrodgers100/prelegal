@@ -24,3 +24,9 @@ def client(db_path):
     """A client whose startup has created the schema."""
     with TestClient(app) as test_client:
         yield test_client
+
+
+@pytest.fixture
+def anyio_backend():
+    """Runs `@pytest.mark.anyio` tests on asyncio, the only backend in use."""
+    return "asyncio"

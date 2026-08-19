@@ -3,8 +3,10 @@
 import { useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import NdaCoverPage from "./NdaCoverPage";
 import SignOutButton from "./SignOutButton";
+import NdaChat from "./NdaChat";
 import NdaForm from "./NdaForm";
 import { createEmptyNda, todayInputValue, type NdaData } from "@/lib/nda";
+import { applyUpdates, type NdaUpdates } from "@/lib/chat";
 import { missingFieldLabels } from "@/lib/format";
 
 /**
@@ -24,9 +26,14 @@ function useToday(): string {
 }
 
 /**
- * The Mutual NDA creator: a form on the left, a live preview of the agreement
- * on the right, and a download that goes through the browser's print dialog
- * (choose "Save as PDF").
+ * The Mutual NDA creator: a conversation with the drafting assistant on the
+ * left, a live preview of the agreement on the right, and a download that goes
+ * through the browser's print dialog (choose "Save as PDF").
+ *
+ * The agreement lives here rather than in the chat, so what the assistant
+ * learns and what the user types into the review panel land in one place. The
+ * assistant sends only the fields it picked up, which is what keeps a reply
+ * from overwriting an edit made while the message was in flight.
  *
  * `standardTerms` is rendered on the server and passed in as an element so the
  * markdown renderer never reaches the client bundle.
@@ -46,6 +53,9 @@ export default function NdaCreator({ standardTerms }: { standardTerms: ReactNode
 
   const update = (patch: Partial<NdaData>) =>
     setData((current) => ({ ...current, ...patch }));
+
+  const learn = (updates: NdaUpdates) =>
+    setData((current) => applyUpdates(current, updates));
 
   return (
     <div className="app-shell min-h-screen bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
@@ -79,11 +89,27 @@ export default function NdaCreator({ standardTerms }: { standardTerms: ReactNode
       <main className="mx-auto grid max-w-7xl gap-8 px-6 py-8 lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]">
         <section
           aria-label="Agreement details"
-          className="no-print lg:sticky lg:top-24 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto"
+          className="no-print space-y-4 lg:sticky lg:top-24"
         >
-          <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <NdaForm data={nda} onChange={update} onReset={() => setData(createEmptyNda())} />
+          <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <NdaChat data={nda} onUpdates={learn} />
           </div>
+
+          {/* The assistant does the filling in, but it can mishear. This is
+              how a value gets corrected without arguing with it. */}
+          <details className="rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <summary className="cursor-pointer px-6 py-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
+              Review fields
+              {missing.length > 0 ? (
+                <span className="ml-1 font-normal text-slate-500 dark:text-slate-400">
+                  ({missing.length} still to fill in)
+                </span>
+              ) : null}
+            </summary>
+            <div className="max-h-[60vh] overflow-y-auto border-t border-slate-200 px-6 py-5 dark:border-slate-800">
+              <NdaForm data={nda} onChange={update} onReset={() => setData(createEmptyNda())} />
+            </div>
+          </details>
         </section>
 
         <section aria-label="Agreement preview" className="min-w-0">

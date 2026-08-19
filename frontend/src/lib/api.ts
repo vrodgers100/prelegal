@@ -6,6 +6,9 @@
  * which serves the frontend on its own port and needs an absolute base.
  */
 
+import type { ChatMessage, ChatTurn } from "./chat";
+import type { NdaData } from "./nda";
+
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "";
 
 /** A signed-in user, as `/api/auth/*` returns one. */
@@ -62,4 +65,15 @@ export function signUp(credentials: Credentials): Promise<User> {
 /** Signs in. V1 accepts any credentials and registers unknown emails. */
 export function signIn(credentials: Credentials): Promise<User> {
   return post<User>("/auth/login", credentials);
+}
+
+/**
+ * Sends one turn of the drafting conversation.
+ *
+ * The whole transcript and the document as it currently stands go up every
+ * time: the API keeps no session, so the browser is the only thing that
+ * remembers. Answers with a 503 when the assistant has no API key configured.
+ */
+export function sendChat(messages: ChatMessage[], fields: NdaData): Promise<ChatTurn> {
+  return post<ChatTurn>("/chat", { messages, fields });
 }

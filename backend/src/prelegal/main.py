@@ -10,7 +10,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from . import config, db
-from .routers import auth, health
+from .routers import auth, chat, health
 
 
 @asynccontextmanager
@@ -24,6 +24,7 @@ app = FastAPI(title="Prelegal", lifespan=lifespan)
 
 app.include_router(health.router, prefix="/api")
 app.include_router(auth.router, prefix="/api")
+app.include_router(chat.router, prefix="/api")
 
 # Mounted after the API routes, which Starlette matches first. `html=True`
 # serves index.html for a directory path, which is how the exported /app/ route
