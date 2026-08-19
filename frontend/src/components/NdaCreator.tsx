@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import NdaCoverPage from "./NdaCoverPage";
+import SignOutButton from "./SignOutButton";
 import NdaForm from "./NdaForm";
 import { createEmptyNda, todayInputValue, type NdaData } from "@/lib/nda";
 import { missingFieldLabels } from "@/lib/format";
@@ -59,6 +60,7 @@ export default function NdaCreator({ standardTerms }: { standardTerms: ReactNode
             </p>
           </div>
           <div className="flex items-center gap-4">
+            <SignOutButton />
             <p className="hidden text-xs text-slate-500 sm:block dark:text-slate-400">
               Downloads via your browser&rsquo;s print dialog — choose{" "}
               <span className="font-medium">Save as PDF</span>.

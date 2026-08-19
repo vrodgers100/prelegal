@@ -1,0 +1,8 @@
+* text=auto
+
+# The start/stop scripts must keep Unix line endings whatever a contributor's
+# core.autocrlf is set to; a CR would break the shebang on macOS and Linux.
+*.sh text eol=lf
+
+# PowerShell is happiest with CRLF on Windows.
+*.ps1 text eol=crlf
