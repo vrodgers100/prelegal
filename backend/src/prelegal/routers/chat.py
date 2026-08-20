@@ -7,21 +7,24 @@ request was in flight.
 
 A turn with no `documentType` is asking which agreement to draft; one with a
 `documentType` is filling that agreement in.
+
+Signed in only. This is the one route that spends money on every call, so it
+asks who is calling.
 """
 
 from fastapi import APIRouter, HTTPException, status
-from pydantic import ValidationError
 
 from .. import chat, config, openrouter
 from ..chat import ChatTurn
-from ..document_schema import DOCUMENTS, fields_model
+from ..dependencies import CurrentUser
 from ..schemas import ChatRequest
+from ._shared import require_fields, require_spec
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
 
 @router.post("")
-async def send(request: ChatRequest) -> ChatTurn:
+async def send(request: ChatRequest, user: CurrentUser) -> ChatTurn:
     """Answers the latest message and reports the fields it filled in."""
     if not config.OPENROUTER_API_KEY:
         raise HTTPException(
@@ -36,21 +39,8 @@ async def send(request: ChatRequest) -> ChatTurn:
         if request.document_type is None:
             return await chat.select_document(messages)
 
-        spec = DOCUMENTS.get(request.document_type)
-        if spec is None:
-            raise HTTPException(
-                status.HTTP_422_UNPROCESSABLE_CONTENT,
-                f"Prelegal does not draft a {request.document_type!r}.",
-            )
-
-        try:
-            fields = fields_model(spec.document_type).model_validate(request.fields)
-        except ValidationError as error:
-            raise HTTPException(
-                status.HTTP_422_UNPROCESSABLE_CONTENT,
-                f"Those are not valid {spec.name} fields: {error}",
-            ) from None
-
+        spec = require_spec(request.document_type)
+        fields = require_fields(spec, request.fields)
         return await chat.respond(messages, spec, fields)
     except openrouter.OpenRouterError as error:
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, str(error)) from None
