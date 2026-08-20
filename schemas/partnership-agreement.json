@@ -1,0 +1,167 @@
+{
+  "documentType": "partnership-agreement",
+  "name": "Partnership Agreement",
+  "shortName": "Partnership Agreement",
+  "description": "Agreement between two companies collaborating commercially, covering obligations, referral and revenue arrangements, branding and confidentiality.",
+  "templateFile": "partnership-agreement.md",
+  "coverPage": {
+    "title": "Partnership Agreement",
+    "usingHeading": "Using this Partnership Agreement",
+    "intro": "This Partnership Agreement (the “Agreement”) consists of: (1) this Cover Page (“**Cover Page**”) and (2) the Common Paper Partnership Agreement Standard Terms (“**Standard Terms**”). Any modifications of the Standard Terms should be made on the Cover Page, which will control over conflicts with the Standard Terms.",
+    "attestation": "By signing this Cover Page, each party agrees to enter into this Agreement as of the Effective Date.",
+    "attribution": "Common Paper Partnership Agreement free to use under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)."
+  },
+  "formSectionTitle": "Agreement details",
+  "fields": [
+    {
+      "key": "company",
+      "type": "party",
+      "label": "Company",
+      "required": true,
+      "prompt": "the company's legal entity name, the signatory's name and title, and a notice address."
+    },
+    {
+      "key": "partner",
+      "type": "party",
+      "label": "Partner",
+      "required": true,
+      "prompt": "the partner's legal entity name, the signatory's name and title, and a notice address."
+    },
+    {
+      "key": "effectiveDate",
+      "type": "date",
+      "label": "Effective Date",
+      "required": true,
+      "prompt": "the date the partnership starts, as yyyy-mm-dd."
+    },
+    {
+      "key": "endDate",
+      "type": "text",
+      "label": "End Date",
+      "required": true,
+      "prompt": "when the partnership ends, such as \"31 December 2027\" or \"2 years from the Effective Date\"."
+    },
+    {
+      "key": "obligations",
+      "type": "text",
+      "label": "Obligations",
+      "required": true,
+      "prompt": "what each party has agreed to do. Take both sides.",
+      "multiline": true
+    },
+    {
+      "key": "territory",
+      "type": "text",
+      "label": "Territory",
+      "required": true,
+      "prompt": "where the partner may use the company's brand, such as \"the United States and Canada\"."
+    },
+    {
+      "key": "paymentSchedule",
+      "type": "text",
+      "label": "Payment Schedule",
+      "required": false,
+      "prompt": "when payments fall due, if either party pays the other.",
+      "emptyText": "None."
+    },
+    {
+      "key": "paymentProcess",
+      "type": "text",
+      "label": "Payment Process",
+      "required": false,
+      "prompt": "how payments are billed and settled.",
+      "emptyText": "None."
+    },
+    {
+      "key": "brandGuidelines",
+      "type": "text",
+      "label": "Brand Guidelines",
+      "required": false,
+      "prompt": "where the brand guidelines can be read, such as a URL.",
+      "emptyText": "None."
+    },
+    {
+      "key": "governingLaw",
+      "type": "state",
+      "label": "Governing Law",
+      "section": "Governing Law & Chosen Courts",
+      "inlineLabel": "Governing Law",
+      "placeholder": "Fill in state",
+      "required": true,
+      "prompt": "the full name of the US state whose law governs, such as \"Delaware\". Always a state, never a country or a city."
+    },
+    {
+      "key": "chosenCourts",
+      "type": "text",
+      "label": "Chosen Courts",
+      "required": true,
+      "prompt": "the courts that hear disputes, such as \"the state and federal courts located in New Castle County, Delaware\".",
+      "section": "Governing Law & Chosen Courts",
+      "inlineLabel": "Chosen Courts",
+      "placeholder": "Fill in the courts"
+    },
+    {
+      "key": "generalCapAmount",
+      "type": "text",
+      "label": "General Cap Amount",
+      "required": true,
+      "prompt": "the most either party can be made to pay, such as \"$100,000\" or \"the fees paid in the 12 months before the claim\"."
+    },
+    {
+      "key": "increasedClaims",
+      "type": "text",
+      "label": "Increased Claims",
+      "required": false,
+      "prompt": "which kinds of claim carry a higher cap, if any. Usually none.",
+      "emptyText": "None."
+    },
+    {
+      "key": "increasedCapAmount",
+      "type": "text",
+      "label": "Increased Cap Amount",
+      "required": false,
+      "prompt": "the higher cap that applies to Increased Claims, if there are any.",
+      "emptyText": "None."
+    },
+    {
+      "key": "unlimitedClaims",
+      "type": "text",
+      "label": "Unlimited Claims",
+      "required": false,
+      "prompt": "which kinds of claim have no cap at all, if any. Usually none.",
+      "emptyText": "None."
+    },
+    {
+      "key": "companyCoveredClaims",
+      "type": "text",
+      "label": "Company Covered Claims",
+      "required": false,
+      "prompt": "the third-party claims the company indemnifies the partner against, beyond the standard ones. Usually none.",
+      "emptyText": "None."
+    },
+    {
+      "key": "partnerCoveredClaims",
+      "type": "text",
+      "label": "Partner Covered Claims",
+      "required": false,
+      "prompt": "the third-party claims the partner indemnifies the company against, beyond the standard ones. Usually none.",
+      "emptyText": "None."
+    },
+    {
+      "key": "additionalWarranties",
+      "type": "text",
+      "label": "Additional Warranties",
+      "required": false,
+      "prompt": "any warranties beyond the standard terms. Usually none.",
+      "emptyText": "None."
+    },
+    {
+      "key": "dpa",
+      "type": "text",
+      "label": "DPA",
+      "required": false,
+      "prompt": "the data processing agreement between the parties, if they have one. Usually none.",
+      "emptyText": "None."
+    }
+  ]
+}

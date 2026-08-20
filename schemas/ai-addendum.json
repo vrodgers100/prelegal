@@ -1,0 +1,68 @@
+{
+  "documentType": "ai-addendum",
+  "name": "AI Addendum",
+  "shortName": "AI Addendum",
+  "description": "Supplements a product agreement when AI services are used, covering input and output ownership, model training, and AI-specific warranties.",
+  "templateFile": "ai-addendum.md",
+  "coverPage": {
+    "title": "AI Addendum",
+    "usingHeading": "Using this AI Addendum",
+    "intro": "This AI Addendum (the “Agreement”) consists of: (1) this Cover Page (“**Cover Page**”) and (2) the Common Paper AI Addendum Standard Terms (“**Standard Terms**”). Any modifications of the Standard Terms should be made on the Cover Page, which will control over conflicts with the Standard Terms.",
+    "attestation": "By signing this Cover Page, each party agrees to enter into this Agreement as of the Effective Date.",
+    "attribution": "Common Paper AI Addendum free to use under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)."
+  },
+  "formSectionTitle": "Agreement details",
+  "fields": [
+    {
+      "key": "provider",
+      "type": "party",
+      "label": "Provider",
+      "required": true,
+      "prompt": "the provider's legal entity name, the signatory's name and title, and a notice address."
+    },
+    {
+      "key": "customer",
+      "type": "party",
+      "label": "Customer",
+      "required": true,
+      "prompt": "the customer's legal entity name, the signatory's name and title, and a notice address."
+    },
+    {
+      "key": "effectiveDate",
+      "type": "date",
+      "label": "Effective Date",
+      "required": true,
+      "prompt": "the date the addendum starts, as yyyy-mm-dd."
+    },
+    {
+      "key": "trainingData",
+      "type": "text",
+      "label": "Training Data",
+      "required": true,
+      "prompt": "what data the provider may use to train its models, such as \"Customer Content and Usage Data, once de-identified\"."
+    },
+    {
+      "key": "trainingPurposes",
+      "type": "text",
+      "label": "Training Purposes",
+      "required": true,
+      "prompt": "what the provider may train its models for, such as \"improving the accuracy and safety of the Product\"."
+    },
+    {
+      "key": "trainingRestrictions",
+      "type": "text",
+      "label": "Training Restrictions",
+      "required": false,
+      "prompt": "any limits on training beyond the standard terms. Usually none.",
+      "emptyText": "None."
+    },
+    {
+      "key": "improvementRestrictions",
+      "type": "text",
+      "label": "Improvement Restrictions",
+      "required": false,
+      "prompt": "any limits on how the provider may use outputs to improve the product. Usually none.",
+      "emptyText": "None."
+    }
+  ]
+}

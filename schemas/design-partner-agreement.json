@@ -1,0 +1,88 @@
+{
+  "documentType": "design-partner-agreement",
+  "name": "Design Partner Agreement",
+  "shortName": "Design Partner Agreement",
+  "description": "Agreement for early-access design partnerships, covering pre-release product access, feedback, confidentiality and intellectual property.",
+  "templateFile": "design-partner-agreement.md",
+  "coverPage": {
+    "title": "Design Partner Agreement",
+    "usingHeading": "Using this Design Partner Agreement",
+    "intro": "This Design Partner Agreement (the “Agreement”) consists of: (1) this Cover Page (“**Cover Page**”) and (2) the Common Paper Design Partner Agreement Standard Terms (“**Standard Terms**”). Any modifications of the Standard Terms should be made on the Cover Page, which will control over conflicts with the Standard Terms.",
+    "attestation": "By signing this Cover Page, each party agrees to enter into this Agreement as of the Effective Date.",
+    "attribution": "Common Paper Design Partner Agreement free to use under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)."
+  },
+  "formSectionTitle": "Agreement details",
+  "fields": [
+    {
+      "key": "provider",
+      "type": "party",
+      "label": "Provider",
+      "required": true,
+      "prompt": "the provider's legal entity name, the signatory's name and title, and a notice address."
+    },
+    {
+      "key": "partner",
+      "type": "party",
+      "label": "Partner",
+      "required": true,
+      "prompt": "the design partner's legal entity name, the signatory's name and title, and a notice address."
+    },
+    {
+      "key": "effectiveDate",
+      "type": "date",
+      "label": "Effective Date",
+      "required": true,
+      "prompt": "the date the partnership starts, as yyyy-mm-dd."
+    },
+    {
+      "key": "program",
+      "type": "text",
+      "label": "Program",
+      "required": true,
+      "prompt": "what the design partner gets access to and what they are expected to do, such as \"early access to the beta API in exchange for fortnightly feedback calls\".",
+      "multiline": true
+    },
+    {
+      "key": "term",
+      "type": "text",
+      "label": "Term",
+      "required": true,
+      "prompt": "how long the partnership runs, such as \"6 months from the Effective Date\"."
+    },
+    {
+      "key": "fees",
+      "type": "text",
+      "label": "Fees",
+      "required": false,
+      "prompt": "what the partner pays, if anything. Design partnerships are often free.",
+      "emptyText": "None."
+    },
+    {
+      "key": "noticeAddress",
+      "type": "text",
+      "label": "Notice Address",
+      "required": false,
+      "prompt": "where notices under the agreement are sent, if different from the signature block."
+    },
+    {
+      "key": "governingLaw",
+      "type": "state",
+      "label": "Governing Law",
+      "section": "Governing Law & Chosen Courts",
+      "inlineLabel": "Governing Law",
+      "placeholder": "Fill in state",
+      "required": true,
+      "prompt": "the full name of the US state whose law governs, such as \"Delaware\". Always a state, never a country or a city."
+    },
+    {
+      "key": "chosenCourts",
+      "type": "text",
+      "label": "Chosen Courts",
+      "required": true,
+      "prompt": "the courts that hear disputes, such as \"the state and federal courts located in New Castle County, Delaware\".",
+      "section": "Governing Law & Chosen Courts",
+      "inlineLabel": "Chosen Courts",
+      "placeholder": "Fill in the courts"
+    }
+  ]
+}
