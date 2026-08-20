@@ -5,8 +5,9 @@
  * are same-origin by default. `NEXT_PUBLIC_API_BASE` exists for `next dev`,
  * which serves the frontend on its own port and needs an absolute base.
  *
- * Every call goes through `request`, which attaches the bearer token when
- * there is one. That is deliberate: no call site should have to remember, and
+ * Calls come in two kinds. `request` carries the session and treats a 401 as
+ * the session ending; `anonymous` is for the two calls made in order to get a
+ * session, and never sends one. No call site attaches a token itself —
  * forgetting would look like a bug in the feature rather than in the plumbing.
  */
 
@@ -57,12 +58,33 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(
+/**
+ * A call that carries the session, and reads a 401 as the session ending.
+ *
+ * Everything except sign-in and sign-up.
+ */
+function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  return send<T>(method, path, body, readToken());
+}
+
+/**
+ * A call made in order to get a session, so it never sends one.
+ *
+ * Keeping these apart is not tidiness. When sign-in sent the stored token
+ * along, a wrong password came back 401 exactly like a rejected token, and
+ * anyone mistyping their password on a machine that was already signed in
+ * signed the existing user out.
+ */
+function anonymous<T>(method: string, path: string, body?: unknown): Promise<T> {
+  return send<T>(method, path, body, null);
+}
+
+async function send<T>(
   method: string,
   path: string,
-  body?: unknown,
+  body: unknown,
+  token: string | null,
 ): Promise<T> {
-  const token = readToken();
   const response = await fetch(`${API_BASE}/api${path}`, {
     method,
     headers: {
@@ -75,7 +97,8 @@ async function request<T>(
   if (!response.ok) {
     // A rejected token means the session is gone, whatever the caller was
     // doing. Drop it once, here, so no screen is left showing a signed-in
-    // shell it cannot fill.
+    // shell it cannot fill. Only when a token was actually sent: a 401 from
+    // sign-in is a wrong password, not a dead session.
     if (response.status === 401 && token) {
       clearSession();
       window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
@@ -103,12 +126,12 @@ export interface Credentials {
 
 /** Registers a new user and signs them in. Rejects with 409 if the email is taken. */
 export function signUp(credentials: Credentials): Promise<Session> {
-  return request<Session>("POST", "/auth/signup", credentials);
+  return anonymous<Session>("POST", "/auth/signup", credentials);
 }
 
 /** Signs in. Rejects with 401 if the email or password is wrong. */
 export function signIn(credentials: Credentials): Promise<Session> {
-  return request<Session>("POST", "/auth/login", credentials);
+  return anonymous<Session>("POST", "/auth/login", credentials);
 }
 
 /** Ends this session on the server. Signing out twice is not an error. */

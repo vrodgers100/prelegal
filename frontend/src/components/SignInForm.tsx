@@ -4,7 +4,7 @@ import { useId, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, signIn, signUp } from "@/lib/api";
 import { writeSession } from "@/lib/session";
-import { hint, input, label, linkButton, primaryButton } from "@/lib/ui";
+import { card, hint, input, label, linkButton, primaryButton } from "@/lib/ui";
 import { Wordmark } from "./AppShell";
 
 type Mode = "signin" | "signup";
@@ -93,7 +93,7 @@ export default function SignInForm() {
 
         <form
           onSubmit={handleSubmit}
-          className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+          className={`${card} p-6`}
         >
           <h1 className="text-base font-semibold tracking-tight">{copy.heading}</h1>
           <p className={`mt-1 mb-5 ${hint}`}>{copy.lead}</p>

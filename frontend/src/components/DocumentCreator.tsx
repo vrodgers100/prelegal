@@ -14,7 +14,7 @@ import {
 import { getDocument } from "@/lib/api";
 import { applyUpdates, type DocumentUpdates } from "@/lib/chat";
 import { todayInputValue } from "@/lib/format";
-import { primaryButton } from "@/lib/ui";
+import { card, primaryButton } from "@/lib/ui";
 import { useAutosave, type SaveStatus } from "@/lib/useAutosave";
 
 /**
@@ -186,7 +186,7 @@ export default function DocumentCreator({
           </p>
         ) : null}
 
-        <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className={`${card} p-4`}>
           <DocumentChat
             documentType={documentType}
             schemas={schemas}
@@ -199,7 +199,7 @@ export default function DocumentCreator({
         {/* The assistant does the filling in, but it can mishear. This is
             how a value gets corrected without arguing with it. */}
         {schema ? (
-          <details className="rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <details className={card}>
             <summary className="cursor-pointer px-6 py-4 text-sm font-semibold text-slate-900 dark:text-slate-100">
               Review fields
               {missing.length > 0 ? (

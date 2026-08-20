@@ -19,15 +19,6 @@ export const primaryButton =
   "disabled:cursor-not-allowed disabled:opacity-50 " +
   "dark:bg-brand-blue dark:hover:bg-brand-navy";
 
-/** A second-rank action beside a primary one. */
-export const secondaryButton =
-  "inline-flex items-center justify-center gap-2 rounded-md border border-slate-300 " +
-  "bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition " +
-  "hover:border-slate-400 hover:text-slate-900 " +
-  "focus-visible:ring-2 focus-visible:ring-brand-blue/30 focus-visible:outline-none " +
-  "disabled:cursor-not-allowed disabled:opacity-50 " +
-  "dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:text-white";
-
 /** A quiet action that should not look like a button at all. */
 export const linkButton =
   "rounded text-sm font-medium text-brand-blue underline-offset-2 transition " +

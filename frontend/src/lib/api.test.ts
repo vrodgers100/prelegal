@@ -102,13 +102,28 @@ describe("api", () => {
     });
 
     it("is not sent to sign-in, which is what issues it", async () => {
+      // Sign-in establishes a session; it has no use for one, and sending it
+      // is what let a failed sign-in be mistaken for a rejected token.
       writeSession(SESSION);
 
       await signIn(CREDENTIALS);
 
-      expect(lastCall().headers).toMatchObject({
-        Authorization: "Bearer a-bearer-token",
-      });
+      expect(lastCall().headers).not.toHaveProperty("Authorization");
+    });
+
+    it("survives someone failing to sign in on a machine already signed in", async () => {
+      // The 401 there is a wrong password, not a dead session. Treating it as
+      // one signed the existing user out of a session that was still good.
+      writeSession(SESSION);
+      vi.stubGlobal("fetch", respondWith(401, { detail: "Wrong." }));
+      const heard = vi.fn();
+      window.addEventListener(UNAUTHORIZED_EVENT, heard);
+
+      await expect(signIn(CREDENTIALS)).rejects.toThrow();
+
+      expect(readSession()).toEqual(SESSION);
+      expect(heard).not.toHaveBeenCalled();
+      window.removeEventListener(UNAUTHORIZED_EVENT, heard);
     });
   });
 
