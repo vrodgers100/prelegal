@@ -72,7 +72,9 @@ It exists because the same role had three answers: the primary button was `brand
 
 ## Current State
 
-Implemented as of PL-7 (20 August 2026). PL-2 to PL-6 are Live; PL-7 is the last ticket in the project.
+Implemented as of PL-7, merged to `main` as `41bab86` on 20 August 2026 (PR #8).
+
+**Every ticket is Live and the backlog is empty** — PL-2 through PL-7, all merged. Anything from here is new work, so start by writing the ticket rather than looking for one.
 
 **Structure**
 
@@ -129,6 +131,16 @@ Every agreement's Standard Terms are prerendered at build time, all eleven of th
 
 Two behaviours to expect rather than treat as bugs: a turn takes roughly 5–7 seconds with no streaming, and the assistant still paraphrases its way into re-asking a settled field about one turn in eight.
 
+**Two kinds of API call, and the difference matters.** `frontend/src/lib/api.ts` has `request`, which carries the session and reads a 401 as the session ending, and `anonymous`, which is for the two calls made in order to *get* a session and never sends one. Keeping them apart is not tidiness: when sign-in sent the stored token along, a wrong password came back 401 exactly like a rejected token, so anyone mistyping their password on a machine that was already signed in signed the existing user out. Add a new endpoint to `request` unless it is something you call before you have a session.
+
+No call site attaches a token itself. Forgetting would look like a bug in the feature rather than in the plumbing.
+
+**Documents save themselves.** `useAutosave` creates the record when an agreement is settled and rewrites it once the fields have been quiet for 800ms. There is no Save button on purpose: a draft that was filled in, downloaded and closed should still be in the list, and a Save button is the thing people do not press. `/documents` lists them; opening one goes to `/app?open=<id>`, which resumes that same row rather than forking a second.
+
+Only `documentType` and the raw `data` are stored. `withToday` stays out of it — it fills empty required dates for display from the viewer's clock, and freezing that at save time would turn a date nobody chose into one they did.
+
+The query string is read through the same no-op-subscribe idiom as the clock, **not** `useSearchParams`. That hook forces the page under a `<Suspense>` boundary: without one a statically prerendered page builds fine in development and fails the production build.
+
 **Tests**: `cd backend && uv run pytest` (208), `cd frontend && npm test` (110). Run `npm run lint` too — it catches React issues the build does not, and on PL-7 it caught two real ones: `setState` inside an effect cascades renders, and a ref must not be written during render.
 
 **The direct-load redirect is fixed.** `/app` used to bounce a signed-in user to the sign-in screen on a reload, a bookmark or a pasted link. `RequireSession` redirected whenever the session read as null, which during the hydration commit it always does — the store's server snapshot is null by definition. Hydration is now tracked as its own store, so "nobody is signed in" is distinguishable from "we have not looked yet". Any client-side session check on a statically exported page has this shape; keep the two apart.
@@ -146,12 +158,6 @@ jsdom cannot see everything the browser can. The composer's caret used to be res
 - `httpx2` is the HTTP client, and the import name is `httpx2`, not `httpx`. It is a runtime dependency now, not just a test one.
 
 **Cover pages are generated for ten of the eleven.** Only `mutual-nda-coverpage.md` exists in `templates/`; Common Paper ships the others separately and they are not in this repo. Each other agreement's field set is therefore derived from the Variables its Standard Terms already mark up — the `keyterms_link`, `coverpage_link`, `orderform_link` and `businessterms_link` spans — which is the only statement here of what its cover page must carry. The wording around those fields is Prelegal's, not Common Paper's.
-
-**Documents save themselves.** `useAutosave` creates the record when an agreement is settled and rewrites it once the fields have been quiet for 800ms. There is no Save button on purpose: a draft that was filled in, downloaded and closed should still be in the list, and a Save button is the thing people do not press. `/documents` lists them; opening one goes to `/app?open=<id>`, which resumes that same row rather than forking a second.
-
-Only `documentType` and the raw `data` are stored. `withToday` stays out of it — it fills empty required dates for display from the viewer's clock, and freezing that at save time would turn a date nobody chose into one they did.
-
-The query string is read through the same no-op-subscribe idiom as the clock, **not** `useSearchParams`. That hook forces the page under a `<Suspense>` boundary: without one a statically prerendered page builds fine in development and fails the production build.
 
 **Not built yet**: the conversation is still not persisted — a reload starts a fresh chat, though the transcript is the disposable part and the validated fields are the artefact that is kept.
 
