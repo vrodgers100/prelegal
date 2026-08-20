@@ -45,3 +45,24 @@ export function toDateInputValue(date: Date): string {
 export function todayInputValue(): string {
   return toDateInputValue(new Date());
 }
+
+/**
+ * When a saved document was last edited, in the viewer's own time zone.
+ *
+ * The stored value is UTC to the millisecond, which is what keeps the list in
+ * the right order but is not what anyone wants to read. Returns an empty
+ * string for anything unparseable, so a bad timestamp shows as nothing rather
+ * than "Invalid Date".
+ */
+export function formatTimestamp(stored: string): string {
+  const parsed = new Date(stored);
+  if (Number.isNaN(parsed.getTime())) return "";
+
+  return parsed.toLocaleString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}

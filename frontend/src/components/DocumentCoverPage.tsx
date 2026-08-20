@@ -22,6 +22,7 @@ import {
   type FieldSchema,
   type Party,
 } from "@/lib/documents";
+import { DRAFT_NOTICE } from "@/lib/disclaimer";
 import { formatLongDate, pluralYears } from "@/lib/format";
 
 /** A fill-in slot: the user's value, or the template's bracketed prompt. */
@@ -177,6 +178,11 @@ export default function DocumentCoverPage({
   return (
     <article className="doc">
       <h1>{coverPage.title}</h1>
+
+      {/* Inside the document rather than the app chrome, so it is on the page
+          the user downloads and hands to the other side. Chrome carries the
+          same point, but chrome does not travel. */}
+      <p className="doc-notice">{DRAFT_NOTICE}</p>
 
       {coverPage.intro ? (
         <>
