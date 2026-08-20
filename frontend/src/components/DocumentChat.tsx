@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 
 import { ApiError, sendChat } from "@/lib/api";
 import { GREETING, type ChatMessage, type DocumentUpdates } from "@/lib/chat";
 import type { DocumentData, DocumentSchema } from "@/lib/documents";
+import { input, primaryButton } from "@/lib/ui";
 
 /**
  * The drafting conversation.
@@ -166,12 +167,12 @@ export default function DocumentChat({
               ? "Tell me about the agreement…"
               : "Tell me what you need to draft…"
           }
-          className="w-full flex-1 resize-none rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm transition outline-none placeholder:text-slate-400 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-brand-blue"
+          className={`w-full flex-1 resize-none ${input}`}
         />
         <button
           type="submit"
           disabled={pending || !draft.trim()}
-          className="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 focus-visible:ring-2 focus-visible:ring-slate-900/30 focus-visible:outline-none disabled:opacity-40 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+          className={primaryButton}
         >
           Send
         </button>

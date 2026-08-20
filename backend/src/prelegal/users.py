@@ -1,8 +1,9 @@
 """Queries against the users table.
 
-There is no password column. V1 accepts any credentials, so storing a password
-would mean storing a secret nothing checks; real hashing lands with real
-authentication.
+The password is stored as a salted scrypt hash and never in the clear; see
+`security.py`. `find_or_create` is gone: it existed so that V1's sign-in could
+accept any email, and letting sign-in quietly register an unknown address is
+exactly what real authentication must not do.
 """
 
 import sqlite3
@@ -14,13 +15,13 @@ def find_by_email(connection: sqlite3.Connection, email: str) -> sqlite3.Row | N
     return cursor.fetchone()
 
 
-def create(connection: sqlite3.Connection, email: str) -> sqlite3.Row:
+def create(
+    connection: sqlite3.Connection, email: str, password_hash: str
+) -> sqlite3.Row:
     """Inserts a user. Raises `sqlite3.IntegrityError` if the email is taken."""
-    cursor = connection.execute("INSERT INTO users (email) VALUES (?)", (email,))
+    cursor = connection.execute(
+        "INSERT INTO users (email, password_hash) VALUES (?, ?)",
+        (email, password_hash),
+    )
     row = connection.execute("SELECT * FROM users WHERE id = ?", (cursor.lastrowid,))
     return row.fetchone()
-
-
-def find_or_create(connection: sqlite3.Connection, email: str) -> sqlite3.Row:
-    """Returns the existing user for this email, creating one if there is none."""
-    return find_by_email(connection, email) or create(connection, email)

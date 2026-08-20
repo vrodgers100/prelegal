@@ -10,8 +10,9 @@ vi.mock("next/navigation", () => ({
 }));
 
 const USER = { id: 1, email: "ada@example.com", created_at: "2026-08-17" };
+const SESSION = { user: USER, token: "a-bearer-token" };
 
-function stubFetch(status = 200, body: unknown = USER) {
+function stubFetch(status = 200, body: unknown = SESSION) {
   const fetchMock = vi.fn().mockResolvedValue({
     ok: status >= 200 && status < 300,
     status,
@@ -23,7 +24,8 @@ function stubFetch(status = 200, body: unknown = USER) {
 
 async function fillIn(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText("Email"), "ada@example.com");
-  await user.type(screen.getByLabelText("Password"), "irrelevant");
+  // Long enough for the form's own minLength, or the browser blocks submit.
+  await user.type(screen.getByLabelText("Password"), "a good password");
 }
 
 describe("SignInForm", () => {
@@ -43,7 +45,7 @@ describe("SignInForm", () => {
 
     await waitFor(() => expect(push).toHaveBeenCalledWith("/app"));
     expect(fetchMock.mock.calls[0][0]).toBe("/api/auth/login");
-    expect(readSession()).toEqual(USER);
+    expect(readSession()).toEqual(SESSION);
   });
 
   it("calls the sign-up endpoint once the user switches mode", async () => {

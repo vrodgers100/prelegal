@@ -4,18 +4,47 @@
  * The app is served by the same FastAPI process that exposes /api, so requests
  * are same-origin by default. `NEXT_PUBLIC_API_BASE` exists for `next dev`,
  * which serves the frontend on its own port and needs an absolute base.
+ *
+ * Calls come in two kinds. `request` carries the session and treats a 401 as
+ * the session ending; `anonymous` is for the two calls made in order to get a
+ * session, and never sends one. No call site attaches a token itself —
+ * forgetting would look like a bug in the feature rather than in the plumbing.
  */
 
 import type { ChatMessage, ChatTurn } from "./chat";
 import type { DocumentData } from "./documents";
+import { clearSession, readToken, type Session } from "./session";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "";
+
+/**
+ * Fired when the API rejects our token.
+ *
+ * The database is dropped on every server restart, which invalidates every
+ * session, so this is a normal thing to happen mid-visit rather than an
+ * exceptional one. RequireSession listens and sends the user back to sign in;
+ * this module stays out of routing.
+ */
+export const UNAUTHORIZED_EVENT = "prelegal:unauthorized";
 
 /** A signed-in user, as `/api/auth/*` returns one. */
 export interface User {
   id: number;
   email: string;
   created_at: string;
+}
+
+/** A saved document as the list shows it. */
+export interface DocumentSummary {
+  id: number;
+  documentType: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** A saved document, with enough to put it back on screen. */
+export interface SavedDocument extends DocumentSummary {
+  fields: DocumentData;
 }
 
 /** Raised when the API answers with a non-2xx status. */
@@ -29,17 +58,55 @@ export class ApiError extends Error {
   }
 }
 
-async function post<T>(path: string, body: unknown): Promise<T> {
+/**
+ * A call that carries the session, and reads a 401 as the session ending.
+ *
+ * Everything except sign-in and sign-up.
+ */
+function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  return send<T>(method, path, body, readToken());
+}
+
+/**
+ * A call made in order to get a session, so it never sends one.
+ *
+ * Keeping these apart is not tidiness. When sign-in sent the stored token
+ * along, a wrong password came back 401 exactly like a rejected token, and
+ * anyone mistyping their password on a machine that was already signed in
+ * signed the existing user out.
+ */
+function anonymous<T>(method: string, path: string, body?: unknown): Promise<T> {
+  return send<T>(method, path, body, null);
+}
+
+async function send<T>(
+  method: string,
+  path: string,
+  body: unknown,
+  token: string | null,
+): Promise<T> {
   const response = await fetch(`${API_BASE}/api${path}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    method,
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
   });
 
   if (!response.ok) {
+    // A rejected token means the session is gone, whatever the caller was
+    // doing. Drop it once, here, so no screen is left showing a signed-in
+    // shell it cannot fill. Only when a token was actually sent: a 401 from
+    // sign-in is a wrong password, not a dead session.
+    if (response.status === 401 && token) {
+      clearSession();
+      window.dispatchEvent(new Event(UNAUTHORIZED_EVENT));
+    }
     throw new ApiError(response.status, await errorMessage(response));
   }
-  return response.json() as Promise<T>;
+
+  return response.status === 204 ? (undefined as T) : ((await response.json()) as T);
 }
 
 /** Pulls FastAPI's `detail` out of an error body, falling back to the status. */
@@ -57,14 +124,19 @@ export interface Credentials {
   password: string;
 }
 
-/** Registers a new user. Rejects with a 409 ApiError if the email is taken. */
-export function signUp(credentials: Credentials): Promise<User> {
-  return post<User>("/auth/signup", credentials);
+/** Registers a new user and signs them in. Rejects with 409 if the email is taken. */
+export function signUp(credentials: Credentials): Promise<Session> {
+  return anonymous<Session>("POST", "/auth/signup", credentials);
 }
 
-/** Signs in. V1 accepts any credentials and registers unknown emails. */
-export function signIn(credentials: Credentials): Promise<User> {
-  return post<User>("/auth/login", credentials);
+/** Signs in. Rejects with 401 if the email or password is wrong. */
+export function signIn(credentials: Credentials): Promise<Session> {
+  return anonymous<Session>("POST", "/auth/login", credentials);
+}
+
+/** Ends this session on the server. Signing out twice is not an error. */
+export function signOut(): Promise<void> {
+  return request<void>("POST", "/auth/logout");
 }
 
 /**
@@ -82,5 +154,28 @@ export function sendChat(
   documentType: string | null,
   fields: DocumentData,
 ): Promise<ChatTurn> {
-  return post<ChatTurn>("/chat", { messages, documentType, fields });
+  return request<ChatTurn>("POST", "/chat", { messages, documentType, fields });
+}
+
+/** Starts saving a new document. */
+export function startDocument(documentType: string): Promise<SavedDocument> {
+  return request<SavedDocument>("POST", "/documents", { documentType });
+}
+
+/** Replaces a saved document's fields. This is what autosave calls. */
+export function saveDocumentFields(
+  id: number,
+  fields: DocumentData,
+): Promise<SavedDocument> {
+  return request<SavedDocument>("PUT", `/documents/${id}/fields`, { fields });
+}
+
+/** The signed-in user's documents, most recently worked on first. */
+export function listDocuments(): Promise<DocumentSummary[]> {
+  return request<DocumentSummary[]>("GET", "/documents");
+}
+
+/** Reads one saved document back. */
+export function getDocument(id: number): Promise<SavedDocument> {
+  return request<SavedDocument>("GET", `/documents/${id}`);
 }

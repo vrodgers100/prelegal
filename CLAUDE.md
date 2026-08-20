@@ -64,11 +64,15 @@ Purple Secondary: #753991
 Dark Navy: #032147  
 Gray Text: #888888
 
-The palette is defined as Tailwind tokens (`brand-navy`, `brand-blue`, `brand-purple`, `brand-yellow`, `brand-gray`) in `frontend/tailwind.config.ts`. Two components use them: `SignInForm` throughout, and `DocumentChat` for its accents only — navy message bubbles, blue focus rings on the composer and the catalogue cards, a yellow rule down the error banner. Everything else is still the prototype's slate: the cover page, the review form, the page chrome. `brand-purple` and `brand-gray` are unused. A real restyle has not happened, so do not read the current mix as a considered design.
+The palette is defined as Tailwind tokens (`brand-navy`, `brand-blue`, `brand-purple`, `brand-yellow`, `brand-gray`) in `frontend/tailwind.config.ts`. **`frontend/src/lib/ui.ts` owns the app's look**: one `primaryButton`, one `input`, one `label`, one `card`, one `linkButton`. Change a role there, not in a component.
+
+It exists because the same role had three answers: the primary button was `brand-navy` on sign-in and `slate-900` for Download and Send, and inputs focused to `brand-blue` in the chat composer but `slate-900` in the review form. Read as two products stitched together. If you add a component, import from `ui.ts` rather than writing the classes again — the first version of `ui.ts` claimed in its own docstring to have fixed those inconsistencies while four components still carried their own copies, which review caught.
+
+`brand-purple` and `brand-gray` are still unused, and that is fine: an unused token beats a decorative one. The agreement itself is deliberately outside all of this — it keeps its paper look in both themes and in print, and takes its rules from `globals.css`.
 
 ## Current State
 
-Implemented as of PL-6, merged to `main` as `07181e8` on 20 August 2026 (PR #7). PL-2 to PL-6 are Live. **PL-7 — "Support multiple users & final polish" — is the next ticket, still To Do**, and it is where the two big absences below get addressed: real authentication and persistence.
+Implemented as of PL-7 (20 August 2026). PL-2 to PL-6 are Live; PL-7 is the last ticket in the project.
 
 **Structure**
 
@@ -88,11 +92,18 @@ The chat feature spans five files worth knowing about: `backend/src/prelegal/ope
 
 **Routes**
 
-- `/` sign-in screen
-- `/app` the agreement creator, behind sign-in. One route for all eleven; the document is picked from the opening catalogue or settled in conversation, can be changed at any point, and is switched client-side.
-- `/api/health`, `/api/auth/signup`, `/api/auth/login`, `/api/chat`
+- `/` sign-in and sign-up
+- `/app` the agreement creator, behind sign-in. One route for all eleven; the document is picked from the opening catalogue or settled in conversation, can be changed at any point, and is switched client-side. `?open=<id>` reopens a saved one.
+- `/documents` everything the signed-in user has drafted, behind sign-in
+- `/api/health`, `/api/auth/signup`, `/api/auth/login`, `/api/auth/logout`
+- `/api/chat` — **requires a bearer token**, being the one route that spends money per call
+- `/api/documents` (POST, GET), `/api/documents/{id}` (GET), `/api/documents/{id}/fields` (PUT) — all require a bearer token
 
-**Sign-in is not authentication.** Any email is accepted, unknown emails are registered on the way past, and passwords are discarded rather than stored. The users table has no password column. Real auth replaces `backend/src/prelegal/routers/auth.py` and `frontend/src/lib/session.ts`, which keeps the session in localStorage.
+**Sign-in is real as of PL-7.** Passwords are hashed with `hashlib.scrypt` in `security.py` — standard library, no dependency — and verified on the way back in. Sign-in no longer registers an unknown email, and answers identically for a wrong password and an email it has never seen, so the errors cannot be used to find out who has an account.
+
+A session is a row in `sessions`, not a column on the user, so signing in on a second device does not sign you out on the first. The token is opaque, never expires, and is sent as `Authorization: Bearer`; `dependencies.current_user` is the one place that resolves it. It is a plain `def`, which FastAPI runs in a threadpool, so it composes with the sync document routes and the async chat route without either knowing about the other.
+
+What is deliberately not built: token expiry, rate limiting, password reset, email verification. The database is dropped on every restart, which ends every session anyway.
 
 **Database** is dropped and recreated on every startup by the lifespan handler in `main.py`. Do not put anything in it that needs to survive a restart. Plain stdlib `sqlite3`, no ORM.
 
@@ -106,7 +117,11 @@ Until the cards existed, the catalogue was discoverable only by asking — and t
 
 While no document is open, choosing substitutes for the extraction call rather than adding to it. Once one is open, `reconsider()` asks the same question again on every turn, so that "actually, make it a pilot agreement" changes the document instead of being answered as an NDA question — it used to be answered as an NDA question 3 times in 3. It reads the same transcript as the extraction and needs nothing from it, so the two run together under `asyncio.gather`: three calls, still two round trips, and the 5–7 second figure below still holds.
 
-A change of agreement discards that turn's extracted fields — they are keyed to the schema being left behind — and the browser starts the new document empty. `reconsider()` returns None when the choice names the document already open, which is what keeps a normal turn normal. Measured three runs each: asked to change, 9 switches in 9 across three phrasings; carrying on, 6 in 6 with no false switch, including a message that mentioned another agreement in passing. The one case that is not solid is asking mid-conversation for a document Prelegal cannot draft — see Known defects.
+A change of agreement discards that turn's extracted fields — they are keyed to the schema being left behind — and the browser starts the new document empty. `reconsider()` returns None when the choice names the document already open, which is what keeps a normal turn normal. Measured three runs each: asked to change, 9 switches in 9 across three phrasings; carrying on, 6 in 6 with no false switch, including a message that mentioned another agreement in passing. The one case that is not solid is asking mid-conversation for a document Prelegal cannot draft — see the known defect below.
+
+**The draft notice is part of the document, not the chrome.** `DRAFT_NOTICE` is rendered inside `DocumentCoverPage`, so it is on the page the user downloads and hands to the other side; chrome carries the same point in `AppShell`, but chrome does not travel. In print it drops its tint and keeps a border, because the tint does not survive a black-and-white printer. Verified by emulating print media: the notice renders, the header and the chat panel do not. It is not in `schemas/*.json` — it is identical for all eleven and is not something the drafting model should ever see, let alone rewrite.
+
+**`AppShell`** gives both signed-in screens the same header, nav and notice. It owns identity and navigation only; a screen's own actions stay on the screen, which is why it takes an `actions` slot rather than a list of buttons.
 
 Every agreement's Standard Terms are prerendered at build time, all eleven of them. The page is statically exported, so there is no server left by the time the user picks one.
 
@@ -114,7 +129,9 @@ Every agreement's Standard Terms are prerendered at build time, all eleven of th
 
 Two behaviours to expect rather than treat as bugs: a turn takes roughly 5–7 seconds with no streaming, and the assistant still paraphrases its way into re-asking a settled field about one turn in eight.
 
-**Tests**: `cd backend && uv run pytest` (155), `cd frontend && npm test` (86). Run `npm run lint` too — it catches React issues the build does not.
+**Tests**: `cd backend && uv run pytest` (208), `cd frontend && npm test` (110). Run `npm run lint` too — it catches React issues the build does not, and on PL-7 it caught two real ones: `setState` inside an effect cascades renders, and a ref must not be written during render.
+
+**The direct-load redirect is fixed.** `/app` used to bounce a signed-in user to the sign-in screen on a reload, a bookmark or a pasted link. `RequireSession` redirected whenever the session read as null, which during the hydration commit it always does — the store's server snapshot is null by definition. Hydration is now tracked as its own store, so "nobody is signed in" is distinguishable from "we have not looked yet". Any client-side session check on a statically exported page has this shape; keep the two apart.
 
 jsdom cannot see everything the browser can. The composer's caret used to be restored with `setTimeout(..., 0)`, which in Chrome fires about 5ms *before* React's re-render clears the textarea's `disabled` attribute, so `focus()` was silently dropped on every turn — the caret sat on `<body>` and the next answer had to start with a mouse click. Every jsdom test of it passed throughout, because Testing Library's `act` flushes the render first. It is a `useEffect` on `pending` now, which is ordered against the render by React rather than by luck. Anything else in this class needs a real browser to test.
 
@@ -130,9 +147,14 @@ jsdom cannot see everything the browser can. The composer's caret used to be res
 
 **Cover pages are generated for ten of the eleven.** Only `mutual-nda-coverpage.md` exists in `templates/`; Common Paper ships the others separately and they are not in this repo. Each other agreement's field set is therefore derived from the Variables its Standard Terms already mark up — the `keyterms_link`, `coverpage_link`, `orderform_link` and `businessterms_link` spans — which is the only statement here of what its cover page must carry. The wording around those fields is Prelegal's, not Common Paper's.
 
-**Not built yet**: real authentication and persistence. The conversation is not persisted either — a reload starts a fresh chat, though the document is equally lost, so the two agree. All of this is PL-7's ground.
+**Documents save themselves.** `useAutosave` creates the record when an agreement is settled and rewrites it once the fields have been quiet for 800ms. There is no Save button on purpose: a draft that was filled in, downloaded and closed should still be in the list, and a Save button is the thing people do not press. `/documents` lists them; opening one goes to `/app?open=<id>`, which resumes that same row rather than forking a second.
 
-**Known defects**, found but not fixed, both reproduced:
+Only `documentType` and the raw `data` are stored. `withToday` stays out of it — it fills empty required dates for display from the viewer's clock, and freezing that at save time would turn a date nobody chose into one they did.
 
-- **Loading `/app/` directly signs you out.** A reload, a bookmark or a pasted link bounces to `/` even with a valid session. `RequireSession` reads `useSyncExternalStore`'s *server* snapshot — null — on the hydration commit, and its `useEffect` redirects before the client snapshot arrives. Signing in normally works because that is a client-side navigation with no hydration. Any client-side session check on a statically exported page has this shape, so PL-7's real sessions have to solve it rather than inherit it.
+The query string is read through the same no-op-subscribe idiom as the clock, **not** `useSearchParams`. That hook forces the page under a `<Suspense>` boundary: without one a statically prerendered page builds fine in development and fails the production build.
+
+**Not built yet**: the conversation is still not persisted — a reload starts a fresh chat, though the transcript is the disposable part and the validated fields are the artefact that is kept.
+
+**Known defect**, reproduced and not fixed:
+
 - **Asking mid-conversation for a document Prelegal cannot draft is unreliable.** `reconsider()` mostly returns a nearest match, but the model sometimes answers that the nearest match is the agreement already open, which is filtered out and the assistant carries on as if nothing was asked. The same request *before* a document is open is handled properly by `select_document`. Phrasing-sensitive, so measure over several runs before believing any change to it.

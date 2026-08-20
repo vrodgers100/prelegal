@@ -4,12 +4,15 @@ import { useId, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, signIn, signUp } from "@/lib/api";
 import { writeSession } from "@/lib/session";
+import { card, hint, input, label, linkButton, primaryButton } from "@/lib/ui";
+import { Wordmark } from "./AppShell";
 
 type Mode = "signin" | "signup";
 
 const COPY = {
   signin: {
     heading: "Sign in",
+    lead: "Pick up where you left off.",
     submit: "Sign in",
     busy: "Signing in…",
     switchPrompt: "New to Prelegal?",
@@ -17,6 +20,7 @@ const COPY = {
   },
   signup: {
     heading: "Create your account",
+    lead: "Draft an agreement in a conversation, then download it.",
     submit: "Create account",
     busy: "Creating account…",
     switchPrompt: "Already have an account?",
@@ -24,17 +28,26 @@ const COPY = {
   },
 } as const;
 
+/** The shortest password the API accepts, said here so the form can say so. */
+const MIN_PASSWORD = 8;
+
 /**
  * The sign-in screen.
  *
- * V1 has no authentication: any email gets you in, and an unrecognised one is
- * registered on the way past. The form still talks to the API and the database
- * so the path is the one real sign-in will use.
+ * Real credentials since PL-7: the password is hashed, stored and checked, and
+ * an unknown email is no longer registered on the way past — you sign up or
+ * you sign in, and the form says which it is doing.
+ *
+ * The one thing it goes out of its way to be honest about is how long an
+ * account lasts. The database is a scratch store dropped whenever the server
+ * restarts; a product that quietly loses your work is worse than one that says
+ * it might.
  */
 export default function SignInForm() {
   const router = useRouter();
   const emailId = useId();
   const passwordId = useId();
+  const hintId = useId();
 
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
@@ -69,26 +82,25 @@ export default function SignInForm() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-slate-100 px-6 py-12 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-6 py-12 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
       <div className="w-full max-w-sm">
-        <div className="mb-8 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight text-brand-navy dark:text-white">
-            Prelegal
-          </h1>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+        <div className="mb-8 flex flex-col items-center text-center">
+          <Wordmark className="scale-125" />
+          <p className={`mt-3 ${hint}`}>
             Draft legal agreements from vetted templates.
           </p>
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+          className={`${card} p-6`}
         >
-          <h2 className="mb-5 text-sm font-semibold">{copy.heading}</h2>
+          <h1 className="text-base font-semibold tracking-tight">{copy.heading}</h1>
+          <p className={`mt-1 mb-5 ${hint}`}>{copy.lead}</p>
 
           <div className="space-y-4">
             <label className="block" htmlFor={emailId}>
-              <span className={labelClass}>Email</span>
+              <span className={label}>Email</span>
               <input
                 id={emailId}
                 type="email"
@@ -96,23 +108,36 @@ export default function SignInForm() {
                 autoComplete="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                className={inputClass}
+                className={input}
                 placeholder="you@company.com"
               />
             </label>
 
-            <label className="block" htmlFor={passwordId}>
-              <span className={labelClass}>Password</span>
-              <input
-                id={passwordId}
-                type="password"
-                required
-                autoComplete={mode === "signin" ? "current-password" : "new-password"}
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                className={inputClass}
-              />
-            </label>
+            {/* The hint sits outside the label deliberately: inside, it would
+                become part of the field's accessible name, so the password
+                box would announce itself as "Password At least 8 characters".
+                `aria-describedby` attaches it without that. */}
+            <div>
+              <label className="block" htmlFor={passwordId}>
+                <span className={label}>Password</span>
+                <input
+                  id={passwordId}
+                  type="password"
+                  required
+                  minLength={MIN_PASSWORD}
+                  aria-describedby={mode === "signup" ? hintId : undefined}
+                  autoComplete={mode === "signin" ? "current-password" : "new-password"}
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  className={input}
+                />
+              </label>
+              {mode === "signup" ? (
+                <p id={hintId} className={`mt-1.5 ${hint}`}>
+                  At least {MIN_PASSWORD} characters.
+                </p>
+              ) : null}
+            </div>
           </div>
 
           {error ? (
@@ -124,36 +149,23 @@ export default function SignInForm() {
             </p>
           ) : null}
 
-          <button
-            type="submit"
-            disabled={busy}
-            className="mt-6 w-full rounded-md bg-brand-navy px-4 py-2 text-sm font-medium text-white transition hover:bg-brand-blue focus-visible:ring-2 focus-visible:ring-brand-blue/40 focus-visible:outline-none disabled:opacity-60"
-          >
+          <button type="submit" disabled={busy} className={`mt-6 w-full ${primaryButton}`}>
             {busy ? copy.busy : copy.submit}
           </button>
 
-          <p className="mt-4 text-center text-xs text-slate-500 dark:text-slate-400">
+          <p className={`mt-4 text-center ${hint}`}>
             {copy.switchPrompt}{" "}
-            <button
-              type="button"
-              onClick={switchMode}
-              className="font-medium text-brand-blue underline-offset-2 hover:underline"
-            >
+            <button type="button" onClick={switchMode} className={linkButton}>
               {copy.switchAction}
             </button>
           </p>
         </form>
 
-        <p className="mt-6 text-center text-xs text-slate-500 dark:text-slate-400">
-          Preview build — sign-in is not yet secured, so any email will do.
+        <p className={`mt-6 text-center ${hint}`}>
+          Preview build — accounts and saved documents are cleared whenever the
+          server restarts.
         </p>
       </div>
     </main>
   );
 }
-
-const inputClass =
-  "w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm transition outline-none placeholder:text-slate-400 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500";
-
-const labelClass =
-  "mb-1.5 block text-xs font-semibold tracking-wide text-slate-700 uppercase dark:text-slate-300";

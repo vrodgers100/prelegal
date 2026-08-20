@@ -30,3 +30,31 @@ def client(db_path):
 def anyio_backend():
     """Runs `@pytest.mark.anyio` tests on asyncio, the only backend in use."""
     return "asyncio"
+
+
+#: A password long enough for `Credentials` to accept.
+PASSWORD = "correct horse battery staple"
+
+
+@pytest.fixture
+def register(client):
+    """Registers a user and returns their bearer headers.
+
+    Takes an email so a test that needs two users can tell them apart, which is
+    what the privacy tests are made of.
+    """
+
+    def _register(email: str = "ada@example.com") -> dict[str, str]:
+        response = client.post(
+            "/api/auth/signup", json={"email": email, "password": PASSWORD}
+        )
+        assert response.status_code == 201, response.text
+        return {"Authorization": f"Bearer {response.json()['token']}"}
+
+    return _register
+
+
+@pytest.fixture
+def auth_headers(register):
+    """Bearer headers for one signed-in user."""
+    return register()

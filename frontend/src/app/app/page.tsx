@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import AppShell from "@/components/AppShell";
 import DocumentCreator from "@/components/DocumentCreator";
 import RequireSession from "@/components/RequireSession";
 import StandardTerms from "@/components/StandardTerms";
@@ -31,11 +32,13 @@ export default function CreatorPage() {
 
   return (
     <RequireSession>
-      <DocumentCreator
-        schemas={schemas}
-        usStates={readUsStates()}
-        standardTerms={standardTerms}
-      />
+      <AppShell>
+        <DocumentCreator
+          schemas={schemas}
+          usStates={readUsStates()}
+          standardTerms={standardTerms}
+        />
+      </AppShell>
     </RequireSession>
   );
 }

@@ -1,14 +1,24 @@
 /**
- * The signed-in user, kept in localStorage.
+ * The signed-in user and the token that proves it, kept in localStorage.
  *
- * V1 has no authentication, so there is no token or cookie to manage — the
- * session is just a note of who walked in. Real sessions arrive with real
- * sign-in.
+ * The token is what the API actually trusts; the user is here so the chrome
+ * can say who is signed in without asking. Both arrive together from
+ * `/api/auth/*` and are cleared together.
+ *
+ * localStorage rather than a cookie because the frontend is a static export
+ * served by the same process as the API: there is no server render that could
+ * read a cookie, and every authenticated call is made from JavaScript anyway.
  */
 
 import type { User } from "./api";
 
-const STORAGE_KEY = "prelegal.user";
+const STORAGE_KEY = "prelegal.session";
+
+/** A signed-in session: who, and the proof. */
+export interface Session {
+  user: User;
+  token: string;
+}
 
 /**
  * The stored session exactly as localStorage holds it, or null.
@@ -21,13 +31,20 @@ export function sessionSnapshot(): string | null {
   return window.localStorage.getItem(STORAGE_KEY);
 }
 
-/** Reads the stored user, or null if nobody is signed in. */
-export function readSession(): User | null {
+/** Reads the stored session, or null if nobody is signed in. */
+export function readSession(): Session | null {
   const stored = sessionSnapshot();
   if (!stored) return null;
 
   try {
-    return JSON.parse(stored) as User;
+    const session = JSON.parse(stored) as Partial<Session>;
+    // A session without a token cannot authenticate anything, so it is no
+    // more use than no session at all.
+    if (!session?.token || !session.user) {
+      clearSession();
+      return null;
+    }
+    return session as Session;
   } catch {
     // A corrupt entry is not worth surfacing; treat it as signed out.
     clearSession();
@@ -35,8 +52,13 @@ export function readSession(): User | null {
   }
 }
 
-export function writeSession(user: User): void {
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+/** The bearer token for the current session, if there is one. */
+export function readToken(): string | null {
+  return readSession()?.token ?? null;
+}
+
+export function writeSession(session: Session): void {
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
 }
 
 export function clearSession(): void {
