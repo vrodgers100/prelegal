@@ -1,10 +1,8 @@
 """Request and response models for the API."""
 
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, EmailStr, Field
-
-from .nda import NdaFields
 
 
 class Credentials(BaseModel):
@@ -39,7 +37,15 @@ class ChatRequest(BaseModel):
 
     The browser owns the document, so it sends the current fields with every
     message rather than the server keeping a session.
+
+    `fields` stays untyped here because its shape depends on `document_type`,
+    which is only known once the body is read. The router validates it against
+    that agreement's own model. A null `document_type` means no agreement has
+    been chosen yet, and the turn is a choosing turn.
     """
 
     messages: list[ChatMessage] = Field(min_length=1)
-    fields: NdaFields
+    document_type: str | None = Field(default=None, alias="documentType")
+    fields: dict[str, Any] = Field(default_factory=dict)
+
+    model_config = {"populate_by_name": True}
