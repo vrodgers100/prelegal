@@ -1,0 +1,60 @@
+{
+  "documentType": "business-associate-agreement",
+  "name": "Business Associate Agreement",
+  "shortName": "BAA",
+  "description": "HIPAA agreement setting out how a provider may use, disclose and safeguard protected health information handled for a covered entity.",
+  "templateFile": "business-associate-agreement.md",
+  "coverPage": {
+    "title": "Business Associate Agreement",
+    "usingHeading": "Using this Business Associate Agreement",
+    "intro": "This Business Associate Agreement (the “Agreement”) consists of: (1) this Cover Page (“**Cover Page**”) and (2) the Common Paper Business Associate Agreement Standard Terms (“**Standard Terms**”). Any modifications of the Standard Terms should be made on the Cover Page, which will control over conflicts with the Standard Terms.",
+    "attestation": "By signing this Cover Page, each party agrees to enter into this Agreement as of the Effective Date.",
+    "attribution": "Common Paper Business Associate Agreement free to use under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)."
+  },
+  "formSectionTitle": "Agreement details",
+  "fields": [
+    {
+      "key": "company",
+      "type": "party",
+      "label": "Company",
+      "required": true,
+      "prompt": "the covered entity's legal name, the signatory's name and title, and a notice address."
+    },
+    {
+      "key": "provider",
+      "type": "party",
+      "label": "Provider",
+      "required": true,
+      "prompt": "the business associate's legal name, the signatory's name and title, and a notice address."
+    },
+    {
+      "key": "baaEffectiveDate",
+      "type": "date",
+      "label": "BAA Effective Date",
+      "required": true,
+      "prompt": "the date this BAA starts, as yyyy-mm-dd."
+    },
+    {
+      "key": "agreement",
+      "type": "text",
+      "label": "Agreement",
+      "required": true,
+      "prompt": "the underlying agreement this BAA attaches to, such as \"the Cloud Service Agreement dated 1 March 2026\"."
+    },
+    {
+      "key": "breachNotificationPeriod",
+      "type": "text",
+      "label": "Breach Notification Period",
+      "required": true,
+      "prompt": "how quickly the provider must report a breach, such as \"5 business days after discovery\"."
+    },
+    {
+      "key": "limitations",
+      "type": "text",
+      "label": "Limitations",
+      "required": false,
+      "prompt": "any limits on how the provider may use protected health information, beyond the standard terms. Usually none.",
+      "emptyText": "None."
+    }
+  ]
+}

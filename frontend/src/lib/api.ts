@@ -7,7 +7,7 @@
  */
 
 import type { ChatMessage, ChatTurn } from "./chat";
-import type { NdaData } from "./nda";
+import type { DocumentData } from "./documents";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "";
 
@@ -73,7 +73,14 @@ export function signIn(credentials: Credentials): Promise<User> {
  * The whole transcript and the document as it currently stands go up every
  * time: the API keeps no session, so the browser is the only thing that
  * remembers. Answers with a 503 when the assistant has no API key configured.
+ *
+ * A null `documentType` asks which agreement to draft; the reply carries the
+ * one it settled on, if it settled on any.
  */
-export function sendChat(messages: ChatMessage[], fields: NdaData): Promise<ChatTurn> {
-  return post<ChatTurn>("/chat", { messages, fields });
+export function sendChat(
+  messages: ChatMessage[],
+  documentType: string | null,
+  fields: DocumentData,
+): Promise<ChatTurn> {
+  return post<ChatTurn>("/chat", { messages, documentType, fields });
 }

@@ -1,0 +1,81 @@
+{
+  "documentType": "service-level-agreement",
+  "name": "Service Level Agreement",
+  "shortName": "SLA",
+  "description": "Service level terms for a cloud service, covering target uptime, downtime calculation, support response times and service credits.",
+  "templateFile": "service-level-agreement.md",
+  "coverPage": {
+    "title": "Service Level Agreement",
+    "usingHeading": "Using this Service Level Agreement",
+    "intro": "This Service Level Agreement (the “Agreement”) consists of: (1) this Cover Page (“**Cover Page**”) and (2) the Common Paper Service Level Agreement Standard Terms (“**Standard Terms**”). Any modifications of the Standard Terms should be made on the Cover Page, which will control over conflicts with the Standard Terms.",
+    "attestation": "By signing this Cover Page, each party agrees to enter into this Agreement as of the Effective Date.",
+    "attribution": "Common Paper Service Level Agreement free to use under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)."
+  },
+  "formSectionTitle": "Agreement details",
+  "fields": [
+    {
+      "key": "provider",
+      "type": "party",
+      "label": "Provider",
+      "required": true,
+      "prompt": "the provider's legal entity name, the signatory's name and title, and a notice address."
+    },
+    {
+      "key": "customer",
+      "type": "party",
+      "label": "Customer",
+      "required": true,
+      "prompt": "the customer's legal entity name, the signatory's name and title, and a notice address."
+    },
+    {
+      "key": "subscriptionPeriod",
+      "type": "text",
+      "label": "Subscription Period",
+      "required": true,
+      "prompt": "the period the service levels are measured over, such as \"each calendar month\"."
+    },
+    {
+      "key": "targetUptime",
+      "type": "text",
+      "label": "Target Uptime",
+      "required": true,
+      "prompt": "the uptime the provider commits to, such as \"99.9%\"."
+    },
+    {
+      "key": "uptimeCredit",
+      "type": "text",
+      "label": "Uptime Credit",
+      "required": true,
+      "prompt": "what the customer gets if uptime is missed, such as \"10% of the monthly fee for each 0.1% below target\"."
+    },
+    {
+      "key": "targetResponseTime",
+      "type": "text",
+      "label": "Target Response Time",
+      "required": true,
+      "prompt": "how quickly the provider answers a support request, such as \"4 business hours for urgent issues\"."
+    },
+    {
+      "key": "responseTimeCredit",
+      "type": "text",
+      "label": "Response Time Credit",
+      "required": false,
+      "prompt": "what the customer gets if a response time is missed.",
+      "emptyText": "None."
+    },
+    {
+      "key": "supportChannel",
+      "type": "text",
+      "label": "Support Channel",
+      "required": true,
+      "prompt": "how the customer raises a support request, such as \"support@provider.com\"."
+    },
+    {
+      "key": "scheduledDowntime",
+      "type": "text",
+      "label": "Scheduled Downtime",
+      "required": false,
+      "prompt": "the maintenance windows that do not count against uptime, such as \"Sundays 02:00-06:00 UTC, with 48 hours notice\"."
+    }
+  ]
+}

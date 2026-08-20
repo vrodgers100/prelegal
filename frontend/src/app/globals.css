@@ -170,7 +170,7 @@ body {
 }
 
 /* ---------------------------------------------------------------------------
-   Standard Terms (rendered from templates/mutual-nda.md)
+   Standard Terms (rendered from each agreement's file in templates/)
    --------------------------------------------------------------------------- */
 
 .doc-standard-terms ol {

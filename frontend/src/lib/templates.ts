@@ -10,15 +10,10 @@ import path from "node:path";
 
 const TEMPLATES_DIR = path.join(process.cwd(), "..", "templates");
 
-function readTemplate(filename: string): string {
-  return readFileSync(path.join(TEMPLATES_DIR, filename), "utf8");
-}
-
 /**
- * The Common Paper Mutual NDA Standard Terms (Version 1.0), verbatim. The
- * Cover Page incorporates these by reference, so a self-contained agreement
- * includes them unaltered.
+ * The Standard Terms for one agreement, verbatim. Its Cover Page incorporates
+ * these by reference, so a self-contained agreement includes them unaltered.
  */
-export function readMutualNdaStandardTerms(): string {
-  return readTemplate("mutual-nda.md");
+export function readStandardTerms(filename: string): string {
+  return readFileSync(path.join(TEMPLATES_DIR, filename), "utf8");
 }

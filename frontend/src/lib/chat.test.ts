@@ -1,15 +1,35 @@
 import { describe, expect, it } from "vitest";
-import { applyUpdates } from "./chat";
-import { createEmptyNda, type NdaData } from "./nda";
+import { applyUpdates, type DocumentUpdates } from "./chat";
+import { createEmptyDocument, isParty, type DocumentData, type Party } from "./documents";
+import { readDocumentSchemas, readUsStates } from "./documents.server";
 
-const base = (patch: Partial<NdaData> = {}): NdaData => ({
-  ...createEmptyNda("2026-08-19"),
+/**
+ * Run against the real Mutual NDA schema rather than a fixture, so a change to
+ * `schemas/mutual-nda.json` that breaks the merge is caught here.
+ */
+const schemas = readDocumentSchemas();
+const nda = schemas.find((schema) => schema.documentType === "mutual-nda")!;
+const usStates = readUsStates();
+
+const base = (patch: DocumentData = {}): DocumentData => ({
+  ...createEmptyDocument(nda),
+  effectiveDate: "2026-08-19",
   ...patch,
 });
 
+const merge = (data: DocumentData, updates: DocumentUpdates) =>
+  applyUpdates(nda, data, updates, usStates);
+
+/** Narrows a field value to a party, so the assertions can read its details. */
+const party = (data: DocumentData, key: string): Party => {
+  const value = data[key];
+  if (!isParty(value)) throw new Error(`${key} is not a party`);
+  return value;
+};
+
 describe("applyUpdates", () => {
   it("writes what the assistant learned", () => {
-    const next = applyUpdates(base(), { jurisdiction: "New Castle, DE" });
+    const next = merge(base(), { jurisdiction: "New Castle, DE" });
 
     expect(next.jurisdiction).toBe("New Castle, DE");
   });
@@ -17,27 +37,34 @@ describe("applyUpdates", () => {
   it("leaves fields the assistant did not mention alone", () => {
     const data = base({ jurisdiction: "New Castle, DE" });
 
-    const next = applyUpdates(data, { governingLaw: "Delaware" });
+    const next = merge(data, { governingLaw: "Delaware" });
 
     expect(next.jurisdiction).toBe("New Castle, DE");
+  });
+
+  it("ignores a key the agreement does not have", () => {
+    // A reply for one agreement must not write fields into another's.
+    const next = merge(base(), { pilotPeriod: "30 days" });
+
+    expect(next.pilotPeriod).toBeUndefined();
   });
 
   it("treats null as nothing learned rather than as a value", () => {
     const data = base({ purpose: "Evaluating a partnership." });
 
-    const next = applyUpdates(data, { purpose: null, jurisdiction: undefined });
+    const next = merge(data, { purpose: null, jurisdiction: undefined });
 
     expect(next.purpose).toBe("Evaluating a partnership.");
   });
 
   it("ignores a blank string", () => {
-    const next = applyUpdates(base({ purpose: "Kept." }), { purpose: "   " });
+    const next = merge(base({ purpose: "Kept." }), { purpose: "   " });
 
     expect(next.purpose).toBe("Kept.");
   });
 
   it("trims what it does write", () => {
-    expect(applyUpdates(base(), { jurisdiction: "  Austin, TX \n" }).jurisdiction).toBe(
+    expect(merge(base(), { jurisdiction: "  Austin, TX \n" }).jurisdiction).toBe(
       "Austin, TX",
     );
   });
@@ -45,41 +72,39 @@ describe("applyUpdates", () => {
   it("does not mutate the agreement it was given", () => {
     const data = base();
 
-    applyUpdates(data, { governingLaw: "Delaware", partyOne: { company: "Acme, Inc." } });
+    merge(data, { governingLaw: "Delaware", partyOne: { company: "Acme, Inc." } });
 
     expect(data.governingLaw).toBe("");
-    expect(data.partyOne.company).toBe("");
+    expect(party(data, "partyOne").company).toBe("");
   });
 
   describe("governing law", () => {
     it("accepts a state the form can show", () => {
-      expect(applyUpdates(base(), { governingLaw: "Delaware" }).governingLaw).toBe(
-        "Delaware",
-      );
+      expect(merge(base(), { governingLaw: "Delaware" }).governingLaw).toBe("Delaware");
     });
 
     it("drops anything that is not a state", () => {
       // Observed from the model: "Delphi" in place of Delaware. Leaving the
       // field empty is correctable; a plausible wrong state is not noticed.
-      const next = applyUpdates(base(), { governingLaw: "Delphi" });
+      const next = merge(base(), { governingLaw: "Delphi" });
 
       expect(next.governingLaw).toBe("");
     });
 
     it("drops a country", () => {
-      expect(applyUpdates(base(), { governingLaw: "England" }).governingLaw).toBe("");
+      expect(merge(base(), { governingLaw: "England" }).governingLaw).toBe("");
     });
   });
 
   describe("dates", () => {
     it("accepts the format the date input uses", () => {
-      expect(applyUpdates(base(), { effectiveDate: "2026-12-31" }).effectiveDate).toBe(
+      expect(merge(base(), { effectiveDate: "2026-12-31" }).effectiveDate).toBe(
         "2026-12-31",
       );
     });
 
     it("drops a date it could not parse", () => {
-      const next = applyUpdates(base({ effectiveDate: "2026-08-19" }), {
+      const next = merge(base({ effectiveDate: "2026-08-19" }), {
         effectiveDate: "next Tuesday",
       });
 
@@ -89,26 +114,24 @@ describe("applyUpdates", () => {
 
   describe("term options", () => {
     it("accepts a known option", () => {
-      const next = applyUpdates(base(), { mndaTermKind: "untilTerminated" });
+      const next = merge(base(), { mndaTermKind: "untilTerminated" });
 
       expect(next.mndaTermKind).toBe("untilTerminated");
     });
 
     it("drops an option the form has no checkbox for", () => {
-      const next = applyUpdates(base(), {
-        confidentialityTermKind: "forever" as "perpetual",
-      });
+      const next = merge(base(), { confidentialityTermKind: "forever" });
 
       expect(next.confidentialityTermKind).toBe("years");
     });
 
-    it("holds years inside the range the form allows", () => {
-      expect(applyUpdates(base(), { mndaTermYears: 0 }).mndaTermYears).toBe(1);
-      expect(applyUpdates(base(), { mndaTermYears: 500 }).mndaTermYears).toBe(99);
+    it("holds years inside the range the schema allows", () => {
+      expect(merge(base(), { mndaTermYears: 0 }).mndaTermYears).toBe(1);
+      expect(merge(base(), { mndaTermYears: 500 }).mndaTermYears).toBe(99);
     });
 
     it("drops a fractional number of years", () => {
-      const next = applyUpdates(base({ mndaTermYears: 2 }), { mndaTermYears: 1.5 });
+      const next = merge(base({ mndaTermYears: 2 }), { mndaTermYears: 1.5 });
 
       expect(next.mndaTermYears).toBe(2);
     });
@@ -125,10 +148,10 @@ describe("applyUpdates", () => {
         },
       });
 
-      const next = applyUpdates(data, { partyOne: { company: "Acme, Inc." } });
+      const next = merge(data, { partyOne: { company: "Acme, Inc." } });
 
-      expect(next.partyOne.company).toBe("Acme, Inc.");
-      expect(next.partyTwo.company).toBe("Globex");
+      expect(party(next, "partyOne").company).toBe("Acme, Inc.");
+      expect(party(next, "partyTwo").company).toBe("Globex");
     });
 
     it("keeps the details of a party it only partly learned", () => {
@@ -141,7 +164,7 @@ describe("applyUpdates", () => {
         },
       });
 
-      const next = applyUpdates(data, { partyOne: { signatoryTitle: "President" } });
+      const next = merge(data, { partyOne: { signatoryTitle: "President" } });
 
       expect(next.partyOne).toEqual({
         company: "Acme, Inc.",
@@ -161,7 +184,7 @@ describe("applyUpdates", () => {
         },
       });
 
-      expect(applyUpdates(data, { partyOne: {} }).partyOne.company).toBe("Acme, Inc.");
+      expect(party(merge(data, { partyOne: {} }), "partyOne").company).toBe("Acme, Inc.");
     });
   });
 
@@ -170,7 +193,7 @@ describe("applyUpdates", () => {
     // learned, so a field typed into the form meanwhile is not rolled back.
     const typedMeanwhile = base({ jurisdiction: "New Castle, DE" });
 
-    const next = applyUpdates(typedMeanwhile, { governingLaw: "Delaware" });
+    const next = merge(typedMeanwhile, { governingLaw: "Delaware" });
 
     expect(next).toMatchObject({
       jurisdiction: "New Castle, DE",

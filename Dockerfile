@@ -1,8 +1,10 @@
 # The whole product in one image: the frontend is exported to static files and
 # served by the FastAPI backend, so there is a single process on a single port.
 #
-# Build from the repository root — the frontend reads `templates/` at build
-# time (see frontend/src/lib/templates.ts), which lives outside frontend/.
+# Build from the repository root — the frontend reads `templates/` and
+# `schemas/` at build time (see frontend/src/lib/templates.ts and
+# documents.server.ts), and both live outside frontend/. The backend reads
+# `schemas/` too, which is the point: one description of each agreement.
 
 # --- Stage 1: export the frontend to static HTML ------------------------------
 FROM node:24-alpine AS frontend
@@ -12,6 +14,7 @@ COPY frontend/package.json frontend/package-lock.json frontend/
 RUN cd frontend && npm ci
 
 COPY templates/ templates/
+COPY schemas/ schemas/
 COPY frontend/ frontend/
 RUN cd frontend && npm run build
 
@@ -22,6 +25,7 @@ ENV UV_PROJECT_ENVIRONMENT=/opt/venv \
     UV_COMPILE_BYTECODE=1 \
     UV_LINK_MODE=copy \
     PRELEGAL_STATIC_DIR=/srv/static \
+    PRELEGAL_SCHEMAS_DIR=/srv/schemas \
     PRELEGAL_DB_PATH=/srv/data/prelegal.db
 
 WORKDIR /srv
@@ -31,6 +35,7 @@ COPY backend/pyproject.toml backend/uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 
 COPY backend/src ./src
+COPY schemas/ ./schemas
 RUN uv sync --frozen --no-dev
 
 COPY --from=frontend /build/frontend/out ./static

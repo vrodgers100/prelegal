@@ -1,0 +1,172 @@
+{
+  "documentType": "software-license-agreement",
+  "name": "Software License Agreement",
+  "shortName": "License Agreement",
+  "description": "Terms for licensing on-premise or self-hosted software, covering the licence grant, usage restrictions, support, warranties and liability.",
+  "templateFile": "software-license-agreement.md",
+  "coverPage": {
+    "title": "Software License Agreement",
+    "usingHeading": "Using this Software License Agreement",
+    "intro": "This Software License Agreement (the “Agreement”) consists of: (1) this Cover Page (“**Cover Page**”) and (2) the Common Paper Software License Agreement Standard Terms (“**Standard Terms**”). Any modifications of the Standard Terms should be made on the Cover Page, which will control over conflicts with the Standard Terms.",
+    "attestation": "By signing this Cover Page, each party agrees to enter into this Agreement as of the Effective Date.",
+    "attribution": "Common Paper Software License Agreement free to use under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)."
+  },
+  "formSectionTitle": "Agreement details",
+  "fields": [
+    {
+      "key": "provider",
+      "type": "party",
+      "label": "Provider",
+      "required": true,
+      "prompt": "the licensor's legal entity name, the signatory's name and title, and a notice address."
+    },
+    {
+      "key": "customer",
+      "type": "party",
+      "label": "Customer",
+      "required": true,
+      "prompt": "the licensee's legal entity name, the signatory's name and title, and a notice address."
+    },
+    {
+      "key": "effectiveDate",
+      "type": "date",
+      "label": "Effective Date",
+      "required": true,
+      "prompt": "the date the agreement starts, as yyyy-mm-dd."
+    },
+    {
+      "key": "orderDate",
+      "type": "date",
+      "label": "Order Date",
+      "required": false,
+      "prompt": "the date this order starts, as yyyy-mm-dd."
+    },
+    {
+      "key": "subscriptionPeriod",
+      "type": "text",
+      "label": "Subscription Period",
+      "required": true,
+      "prompt": "how long the licence runs before it renews, such as \"12 months\"."
+    },
+    {
+      "key": "nonRenewalNoticeDate",
+      "type": "text",
+      "label": "Non-Renewal Notice Date",
+      "required": false,
+      "prompt": "how much notice is needed not to renew, such as \"60 days before the Subscription Period ends\"."
+    },
+    {
+      "key": "permittedUses",
+      "type": "text",
+      "label": "Permitted Uses",
+      "required": true,
+      "prompt": "what the customer is licensed to do with the software.",
+      "multiline": true
+    },
+    {
+      "key": "licenseLimits",
+      "type": "text",
+      "label": "License Limits",
+      "required": false,
+      "prompt": "any limits on the licence, such as a seat or installation count.",
+      "emptyText": "None."
+    },
+    {
+      "key": "paymentProcess",
+      "type": "text",
+      "label": "Payment Process",
+      "required": true,
+      "prompt": "how and when fees are invoiced and paid."
+    },
+    {
+      "key": "warrantyPeriod",
+      "type": "text",
+      "label": "Warranty Period",
+      "required": false,
+      "prompt": "how long the provider warrants the software works as documented, such as \"90 days\" or \"the Subscription Period\". Record it as written; it is not always a number of years."
+    },
+    {
+      "key": "deletionProcedure",
+      "type": "text",
+      "label": "Deletion Procedure",
+      "required": false,
+      "prompt": "how the customer must remove the software when the licence ends.",
+      "emptyText": "None."
+    },
+    {
+      "key": "governingLaw",
+      "type": "state",
+      "label": "Governing Law",
+      "section": "Governing Law & Chosen Courts",
+      "inlineLabel": "Governing Law",
+      "placeholder": "Fill in state",
+      "required": true,
+      "prompt": "the full name of the US state whose law governs, such as \"Delaware\". Always a state, never a country or a city."
+    },
+    {
+      "key": "chosenCourts",
+      "type": "text",
+      "label": "Chosen Courts",
+      "required": true,
+      "prompt": "the courts that hear disputes, such as \"the state and federal courts located in New Castle County, Delaware\".",
+      "section": "Governing Law & Chosen Courts",
+      "inlineLabel": "Chosen Courts",
+      "placeholder": "Fill in the courts"
+    },
+    {
+      "key": "generalCapAmount",
+      "type": "text",
+      "label": "General Cap Amount",
+      "required": true,
+      "prompt": "the most either party can be made to pay, such as \"$100,000\" or \"the fees paid in the 12 months before the claim\"."
+    },
+    {
+      "key": "increasedClaims",
+      "type": "text",
+      "label": "Increased Claims",
+      "required": false,
+      "prompt": "which kinds of claim carry a higher cap, if any. Usually none.",
+      "emptyText": "None."
+    },
+    {
+      "key": "increasedCapAmount",
+      "type": "text",
+      "label": "Increased Cap Amount",
+      "required": false,
+      "prompt": "the higher cap that applies to Increased Claims, if there are any.",
+      "emptyText": "None."
+    },
+    {
+      "key": "unlimitedClaims",
+      "type": "text",
+      "label": "Unlimited Claims",
+      "required": false,
+      "prompt": "which kinds of claim have no cap at all, if any. Usually none.",
+      "emptyText": "None."
+    },
+    {
+      "key": "providerCoveredClaims",
+      "type": "text",
+      "label": "Provider Covered Claims",
+      "required": false,
+      "prompt": "the third-party claims the provider indemnifies the customer against, beyond the standard ones. Usually none.",
+      "emptyText": "None."
+    },
+    {
+      "key": "customerCoveredClaims",
+      "type": "text",
+      "label": "Customer Covered Claims",
+      "required": false,
+      "prompt": "the third-party claims the customer indemnifies the provider against, beyond the standard ones. Usually none.",
+      "emptyText": "None."
+    },
+    {
+      "key": "additionalWarranties",
+      "type": "text",
+      "label": "Additional Warranties",
+      "required": false,
+      "prompt": "any warranties beyond the standard terms. Usually none.",
+      "emptyText": "None."
+    }
+  ]
+}

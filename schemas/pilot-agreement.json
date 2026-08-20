@@ -1,0 +1,87 @@
+{
+  "documentType": "pilot-agreement",
+  "name": "Pilot Agreement",
+  "shortName": "Pilot Agreement",
+  "description": "Short agreement for a time-limited paid or free product pilot, covering evaluation-only use, the pilot period and conversion to a full agreement.",
+  "templateFile": "pilot-agreement.md",
+  "coverPage": {
+    "title": "Pilot Agreement",
+    "usingHeading": "Using this Pilot Agreement",
+    "intro": "This Pilot Agreement (the “Agreement”) consists of: (1) this Cover Page (“**Cover Page**”) and (2) the Common Paper Pilot Agreement Standard Terms (“**Standard Terms**”). Any modifications of the Standard Terms should be made on the Cover Page, which will control over conflicts with the Standard Terms.",
+    "attestation": "By signing this Cover Page, each party agrees to enter into this Agreement as of the Effective Date.",
+    "attribution": "Common Paper Pilot Agreement free to use under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)."
+  },
+  "formSectionTitle": "Agreement details",
+  "fields": [
+    {
+      "key": "provider",
+      "type": "party",
+      "label": "Provider",
+      "required": true,
+      "prompt": "the provider's legal entity name, the signatory's name and title, and a notice address."
+    },
+    {
+      "key": "customer",
+      "type": "party",
+      "label": "Customer",
+      "required": true,
+      "prompt": "the customer's legal entity name, the signatory's name and title, and a notice address."
+    },
+    {
+      "key": "effectiveDate",
+      "type": "date",
+      "label": "Effective Date",
+      "required": true,
+      "prompt": "the date the pilot starts, as yyyy-mm-dd."
+    },
+    {
+      "key": "pilotPeriod",
+      "type": "text",
+      "label": "Pilot Period",
+      "required": true,
+      "prompt": "how long the pilot runs, such as \"30 days from the Effective Date\"."
+    },
+    {
+      "key": "fees",
+      "type": "text",
+      "label": "Fees",
+      "required": false,
+      "prompt": "what the customer pays for the pilot, if anything. Pilots are often free.",
+      "emptyText": "None."
+    },
+    {
+      "key": "noticeAddress",
+      "type": "text",
+      "label": "Notice Address",
+      "required": false,
+      "prompt": "where notices under the agreement are sent, if different from the signature block."
+    },
+    {
+      "key": "governingLaw",
+      "type": "state",
+      "label": "Governing Law",
+      "section": "Governing Law & Chosen Courts",
+      "inlineLabel": "Governing Law",
+      "placeholder": "Fill in state",
+      "required": true,
+      "prompt": "the full name of the US state whose law governs, such as \"Delaware\". Always a state, never a country or a city."
+    },
+    {
+      "key": "chosenCourts",
+      "type": "text",
+      "label": "Chosen Courts",
+      "required": true,
+      "prompt": "the courts that hear disputes, such as \"the state and federal courts located in New Castle County, Delaware\".",
+      "section": "Governing Law & Chosen Courts",
+      "inlineLabel": "Chosen Courts",
+      "placeholder": "Fill in the courts"
+    },
+    {
+      "key": "generalCapAmount",
+      "type": "text",
+      "label": "General Cap Amount",
+      "required": true,
+      "prompt": "the most either party can be made to pay, such as \"$10,000\"."
+    }
+  ]
+}

@@ -1,0 +1,131 @@
+{
+  "documentType": "data-processing-agreement",
+  "name": "Data Processing Agreement",
+  "shortName": "DPA",
+  "description": "GDPR agreement defining controller and processor roles, subprocessor use, security measures, international transfers and breach notification.",
+  "templateFile": "data-processing-agreement.md",
+  "coverPage": {
+    "title": "Data Processing Agreement",
+    "usingHeading": "Using this Data Processing Agreement",
+    "intro": "This Data Processing Agreement (the “Agreement”) consists of: (1) this Cover Page (“**Cover Page**”) and (2) the Common Paper Data Processing Agreement Standard Terms (“**Standard Terms**”). Any modifications of the Standard Terms should be made on the Cover Page, which will control over conflicts with the Standard Terms.",
+    "attestation": "By signing this Cover Page, each party agrees to enter into this Agreement as of the Effective Date.",
+    "attribution": "Common Paper Data Processing Agreement free to use under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)."
+  },
+  "formSectionTitle": "Agreement details",
+  "fields": [
+    {
+      "key": "customer",
+      "type": "party",
+      "label": "Customer",
+      "required": true,
+      "prompt": "the controller's legal entity name, the signatory's name and title, and a notice address."
+    },
+    {
+      "key": "provider",
+      "type": "party",
+      "label": "Provider",
+      "required": true,
+      "prompt": "the processor's legal entity name, the signatory's name and title, and a notice address."
+    },
+    {
+      "key": "effectiveDate",
+      "type": "date",
+      "label": "Effective Date",
+      "required": true,
+      "prompt": "the date the agreement starts, as yyyy-mm-dd."
+    },
+    {
+      "key": "agreement",
+      "type": "text",
+      "label": "Agreement",
+      "required": true,
+      "prompt": "the underlying agreement this DPA attaches to."
+    },
+    {
+      "key": "natureAndPurposeOfProcessing",
+      "type": "text",
+      "label": "Nature and Purpose of Processing",
+      "required": true,
+      "prompt": "what the provider does with the personal data and why, such as \"hosting and analysing customer records to provide the Service\".",
+      "multiline": true
+    },
+    {
+      "key": "durationOfProcessing",
+      "type": "text",
+      "label": "Duration of Processing",
+      "required": true,
+      "prompt": "how long the processing lasts, such as \"for the term of the Agreement\"."
+    },
+    {
+      "key": "categoriesOfPersonalData",
+      "type": "text",
+      "label": "Categories of Personal Data",
+      "required": true,
+      "prompt": "what kinds of personal data are processed, such as \"names, email addresses and usage logs\".",
+      "multiline": true
+    },
+    {
+      "key": "categoriesOfDataSubjects",
+      "type": "text",
+      "label": "Categories of Data Subjects",
+      "required": true,
+      "prompt": "whose personal data it is, such as \"the customer's employees and end users\".",
+      "multiline": true
+    },
+    {
+      "key": "specialCategoryData",
+      "type": "text",
+      "label": "Special Category Data",
+      "required": false,
+      "prompt": "any special category data under GDPR Article 9, if any is processed. Usually none.",
+      "emptyText": "None.",
+      "multiline": true
+    },
+    {
+      "key": "specialCategoryDataRestrictionsOrSafeguards",
+      "type": "text",
+      "label": "Special Category Data Restrictions or Safeguards",
+      "required": false,
+      "prompt": "any extra safeguards for special category data. Usually none.",
+      "emptyText": "None.",
+      "multiline": true
+    },
+    {
+      "key": "approvedSubprocessors",
+      "type": "text",
+      "label": "Approved Subprocessors",
+      "required": false,
+      "prompt": "the subprocessors the customer has approved, with their country and what they do.",
+      "multiline": true,
+      "emptyText": "None."
+    },
+    {
+      "key": "providerSecurityContact",
+      "type": "text",
+      "label": "Provider Security Contact",
+      "required": true,
+      "prompt": "an email address for the provider's security team."
+    },
+    {
+      "key": "securityPolicy",
+      "type": "text",
+      "label": "Security Policy",
+      "required": false,
+      "prompt": "where the provider's security policy can be read, such as a URL."
+    },
+    {
+      "key": "frequencyOfTransfer",
+      "type": "text",
+      "label": "Frequency of Transfer",
+      "required": false,
+      "prompt": "how often personal data is transferred, such as \"continuously\"."
+    },
+    {
+      "key": "governingMemberState",
+      "type": "text",
+      "label": "Governing Member State",
+      "required": false,
+      "prompt": "the EU member state whose law governs the standard contractual clauses, such as \"Ireland\"."
+    }
+  ]
+}

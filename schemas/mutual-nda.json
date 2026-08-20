@@ -1,0 +1,153 @@
+{
+  "documentType": "mutual-nda",
+  "name": "Mutual Non-Disclosure Agreement",
+  "shortName": "Mutual NDA",
+  "description": "Protects confidential information both parties share while exploring or running a business relationship.",
+  "templateFile": "mutual-nda.md",
+  "coverPage": {
+    "title": "Mutual Non-Disclosure Agreement",
+    "usingHeading": "Using this Mutual Non-Disclosure Agreement",
+    "intro": "This Mutual Non-Disclosure Agreement (the “MNDA”) consists of: (1) this Cover Page (“**Cover Page**”) and (2) the Common Paper Mutual NDA Standard Terms Version 1.0 (“**Standard Terms**”) identical to those posted at [commonpaper.com/standards/mutual-nda/1.0](https://commonpaper.com/standards/mutual-nda/1.0). Any modifications of the Standard Terms should be made on the Cover Page, which will control over conflicts with the Standard Terms.",
+    "attestation": "By signing this Cover Page, each party agrees to enter into this MNDA as of the Effective Date.",
+    "attribution": "Common Paper Mutual Non-Disclosure Agreement (Version 1.0) free to use under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)."
+  },
+  "fields": [
+    {
+      "key": "purpose",
+      "type": "text",
+      "label": "Purpose",
+      "note": "How Confidential Information may be used",
+      "placeholder": "Fill in the purpose",
+      "required": true,
+      "multiline": true,
+      "default": "Evaluating whether to enter into a business relationship with the other party.",
+      "prompt": "what the parties may use each other's confidential information for, in one sentence."
+    },
+    {
+      "key": "effectiveDate",
+      "type": "date",
+      "label": "Effective Date",
+      "placeholder": "Fill in the effective date",
+      "required": true,
+      "prompt": "the date the NDA starts, as yyyy-mm-dd."
+    },
+    {
+      "key": "mndaTermKind",
+      "type": "choice",
+      "label": "MNDA Term",
+      "note": "The length of this MNDA",
+      "required": false,
+      "default": "expires",
+      "options": [
+        {
+          "value": "expires",
+          "label": "Expires {years} from Effective Date.",
+          "formLabel": "year(s) from the effective date, then expires"
+        },
+        {
+          "value": "untilTerminated",
+          "label": "Continues until terminated in accordance with the terms of the MNDA.",
+          "formLabel": "Continues until terminated by either party"
+        }
+      ],
+      "prompt": "\"expires\" when the NDA runs a fixed number of years, \"untilTerminated\" when it continues until someone ends it."
+    },
+    {
+      "key": "mndaTermYears",
+      "type": "years",
+      "label": "Years",
+      "required": false,
+      "default": 1,
+      "min": 1,
+      "max": 99,
+      "dependsOn": {
+        "field": "mndaTermKind",
+        "value": "expires"
+      },
+      "prompt": "whole years, when mndaTermKind is \"expires\"."
+    },
+    {
+      "key": "confidentialityTermKind",
+      "type": "choice",
+      "label": "Term of Confidentiality",
+      "note": "How long Confidential Information is protected",
+      "required": false,
+      "default": "years",
+      "options": [
+        {
+          "value": "years",
+          "label": "{years} from Effective Date, but in the case of trade secrets until Confidential Information is no longer considered a trade secret under applicable laws.",
+          "formLabel": "year(s) from the effective date (trade secrets protected longer)"
+        },
+        {
+          "value": "perpetual",
+          "label": "In perpetuity.",
+          "formLabel": "In perpetuity"
+        }
+      ],
+      "prompt": "\"years\" for a fixed confidentiality period, \"perpetual\" for indefinitely."
+    },
+    {
+      "key": "confidentialityTermYears",
+      "type": "years",
+      "label": "Years",
+      "required": false,
+      "default": 1,
+      "min": 1,
+      "max": 99,
+      "dependsOn": {
+        "field": "confidentialityTermKind",
+        "value": "years"
+      },
+      "prompt": "whole years, when confidentialityTermKind is \"years\"."
+    },
+    {
+      "key": "governingLaw",
+      "type": "state",
+      "label": "Governing Law",
+      "section": "Governing Law & Jurisdiction",
+      "inlineLabel": "Governing Law",
+      "placeholder": "Fill in state",
+      "required": true,
+      "prompt": "the full name of the US state whose law governs, such as \"Delaware\". Always a state, never a country or a city."
+    },
+    {
+      "key": "jurisdiction",
+      "type": "text",
+      "label": "Jurisdiction",
+      "section": "Governing Law & Jurisdiction",
+      "inlineLabel": "Jurisdiction",
+      "placeholder": "Fill in city or county and state",
+      "hint": "City or county, and state.",
+      "required": true,
+      "prompt": "the city or county and state where disputes are heard, such as \"New Castle, DE\"."
+    },
+    {
+      "key": "modifications",
+      "type": "text",
+      "label": "MNDA Modifications",
+      "formLabel": "Modifications",
+      "note": "List any modifications to the MNDA",
+      "hint": "Optional. Anything here controls over the standard terms.",
+      "required": false,
+      "multiline": true,
+      "emptyText": "None.",
+      "prompt": "changes to the standard terms. Usually there are none."
+    },
+    {
+      "key": "partyOne",
+      "type": "party",
+      "label": "Party 1",
+      "required": true,
+      "prompt": "the company's legal entity name, the signatory's name and title, and a notice address (an email or a postal address)."
+    },
+    {
+      "key": "partyTwo",
+      "type": "party",
+      "label": "Party 2",
+      "required": true,
+      "prompt": "the company's legal entity name, the signatory's name and title, and a notice address (an email or a postal address)."
+    }
+  ],
+  "formSectionTitle": "Agreement details"
+}

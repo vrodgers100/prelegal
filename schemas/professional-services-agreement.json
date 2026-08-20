@@ -1,0 +1,152 @@
+{
+  "documentType": "professional-services-agreement",
+  "name": "Professional Services Agreement",
+  "shortName": "Services Agreement",
+  "description": "Master agreement for professional services delivered under statements of work, covering deliverables, fees, personnel, IP ownership and acceptance.",
+  "templateFile": "professional-services-agreement.md",
+  "coverPage": {
+    "title": "Professional Services Agreement",
+    "usingHeading": "Using this Professional Services Agreement",
+    "intro": "This Professional Services Agreement (the “Agreement”) consists of: (1) this Cover Page (“**Cover Page**”) and (2) the Common Paper Professional Services Agreement Standard Terms (“**Standard Terms**”). Any modifications of the Standard Terms should be made on the Cover Page, which will control over conflicts with the Standard Terms.",
+    "attestation": "By signing this Cover Page, each party agrees to enter into this Agreement as of the Effective Date.",
+    "attribution": "Common Paper Professional Services Agreement free to use under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)."
+  },
+  "formSectionTitle": "Agreement details",
+  "fields": [
+    {
+      "key": "provider",
+      "type": "party",
+      "label": "Provider",
+      "required": true,
+      "prompt": "the provider's legal entity name, the signatory's name and title, and a notice address."
+    },
+    {
+      "key": "customer",
+      "type": "party",
+      "label": "Customer",
+      "required": true,
+      "prompt": "the customer's legal entity name, the signatory's name and title, and a notice address."
+    },
+    {
+      "key": "effectiveDate",
+      "type": "date",
+      "label": "Effective Date",
+      "required": true,
+      "prompt": "the date the agreement starts, as yyyy-mm-dd."
+    },
+    {
+      "key": "sowTerm",
+      "type": "text",
+      "label": "SOW Term",
+      "required": true,
+      "prompt": "how long a statement of work runs, such as \"until the deliverables are accepted\"."
+    },
+    {
+      "key": "customerPolicies",
+      "type": "text",
+      "label": "Customer Policies",
+      "required": false,
+      "prompt": "any customer policies the provider's people must follow on site. Usually none.",
+      "emptyText": "None."
+    },
+    {
+      "key": "insuranceMinimums",
+      "type": "text",
+      "label": "Insurance Minimums",
+      "required": false,
+      "prompt": "the insurance the provider must carry, if any is required.",
+      "emptyText": "None."
+    },
+    {
+      "key": "securityPolicy",
+      "type": "text",
+      "label": "Security Policy",
+      "required": false,
+      "prompt": "where the provider's security policy can be read, such as a URL.",
+      "emptyText": "None."
+    },
+    {
+      "key": "governingLaw",
+      "type": "state",
+      "label": "Governing Law",
+      "section": "Governing Law & Chosen Courts",
+      "inlineLabel": "Governing Law",
+      "placeholder": "Fill in state",
+      "required": true,
+      "prompt": "the full name of the US state whose law governs, such as \"Delaware\". Always a state, never a country or a city."
+    },
+    {
+      "key": "chosenCourts",
+      "type": "text",
+      "label": "Chosen Courts",
+      "required": true,
+      "prompt": "the courts that hear disputes, such as \"the state and federal courts located in New Castle County, Delaware\".",
+      "section": "Governing Law & Chosen Courts",
+      "inlineLabel": "Chosen Courts",
+      "placeholder": "Fill in the courts"
+    },
+    {
+      "key": "generalCapAmount",
+      "type": "text",
+      "label": "General Cap Amount",
+      "required": true,
+      "prompt": "the most either party can be made to pay, such as \"$100,000\" or \"the fees paid in the 12 months before the claim\"."
+    },
+    {
+      "key": "increasedClaims",
+      "type": "text",
+      "label": "Increased Claims",
+      "required": false,
+      "prompt": "which kinds of claim carry a higher cap, if any. Usually none.",
+      "emptyText": "None."
+    },
+    {
+      "key": "increasedCapAmount",
+      "type": "text",
+      "label": "Increased Cap Amount",
+      "required": false,
+      "prompt": "the higher cap that applies to Increased Claims, if there are any.",
+      "emptyText": "None."
+    },
+    {
+      "key": "unlimitedClaims",
+      "type": "text",
+      "label": "Unlimited Claims",
+      "required": false,
+      "prompt": "which kinds of claim have no cap at all, if any. Usually none.",
+      "emptyText": "None."
+    },
+    {
+      "key": "providerCoveredClaims",
+      "type": "text",
+      "label": "Provider Covered Claims",
+      "required": false,
+      "prompt": "the third-party claims the provider indemnifies the customer against, beyond the standard ones. Usually none.",
+      "emptyText": "None."
+    },
+    {
+      "key": "customerCoveredClaims",
+      "type": "text",
+      "label": "Customer Covered Claims",
+      "required": false,
+      "prompt": "the third-party claims the customer indemnifies the provider against, beyond the standard ones. Usually none.",
+      "emptyText": "None."
+    },
+    {
+      "key": "additionalWarranties",
+      "type": "text",
+      "label": "Additional Warranties",
+      "required": false,
+      "prompt": "any warranties beyond the standard terms. Usually none.",
+      "emptyText": "None."
+    },
+    {
+      "key": "dpa",
+      "type": "text",
+      "label": "DPA",
+      "required": false,
+      "prompt": "the data processing agreement between the parties, if they have one. Usually none.",
+      "emptyText": "None."
+    }
+  ]
+}
