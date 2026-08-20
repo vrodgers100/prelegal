@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatLongDate, missingFieldLabels, pluralYears } from "./format";
-import { createEmptyNda, type NdaData } from "./nda";
+import { formatLongDate, pluralYears, toDateInputValue } from "./format";
 
 describe("formatLongDate", () => {
   it("spells out an ISO date the way a legal document does", () => {
@@ -30,45 +29,8 @@ describe("pluralYears", () => {
   });
 });
 
-describe("missingFieldLabels", () => {
-  const complete = (): NdaData => ({
-    ...createEmptyNda("2026-08-17"),
-    governingLaw: "Delaware",
-    jurisdiction: "New Castle, DE",
-    partyOne: {
-      company: "Acme, Inc.",
-      signatoryName: "Ada Lovelace",
-      signatoryTitle: "CEO",
-      noticeAddress: "ada@acme.example",
-    },
-    partyTwo: {
-      company: "Globex LLC",
-      signatoryName: "Grace Hopper",
-      signatoryTitle: "CTO",
-      noticeAddress: "grace@globex.example",
-    },
-  });
-
-  it("reports nothing when every field is filled in", () => {
-    expect(missingFieldLabels(complete())).toEqual([]);
-  });
-
-  it("names each empty field", () => {
-    const data = { ...complete(), governingLaw: "", jurisdiction: "" };
-
-    expect(missingFieldLabels(data)).toEqual(["Governing Law", "Jurisdiction"]);
-  });
-
-  it("treats whitespace as empty", () => {
-    const data = { ...complete(), purpose: "   " };
-
-    expect(missingFieldLabels(data)).toContain("Purpose");
-  });
-
-  it("reports both parties separately", () => {
-    const data = complete();
-    data.partyTwo = { ...data.partyTwo, company: "" };
-
-    expect(missingFieldLabels(data)).toEqual(["Party 2 company"]);
+describe("toDateInputValue", () => {
+  it("zero-pads the way an input[type=date] expects", () => {
+    expect(toDateInputValue(new Date(2026, 0, 5))).toBe("2026-01-05");
   });
 });

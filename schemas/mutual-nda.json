@@ -40,10 +40,15 @@
       "required": false,
       "default": "expires",
       "options": [
-        { "value": "expires", "label": "Expires {years} from Effective Date." },
+        {
+          "value": "expires",
+          "label": "Expires {years} from Effective Date.",
+          "formLabel": "year(s) from the effective date, then expires"
+        },
         {
           "value": "untilTerminated",
-          "label": "Continues until terminated in accordance with the terms of the MNDA."
+          "label": "Continues until terminated in accordance with the terms of the MNDA.",
+          "formLabel": "Continues until terminated by either party"
         }
       ],
       "prompt": "\"expires\" when the NDA runs a fixed number of years, \"untilTerminated\" when it continues until someone ends it."
@@ -56,7 +61,10 @@
       "default": 1,
       "min": 1,
       "max": 99,
-      "dependsOn": { "field": "mndaTermKind", "value": "expires" },
+      "dependsOn": {
+        "field": "mndaTermKind",
+        "value": "expires"
+      },
       "prompt": "whole years, when mndaTermKind is \"expires\"."
     },
     {
@@ -69,9 +77,14 @@
       "options": [
         {
           "value": "years",
-          "label": "{years} from Effective Date, but in the case of trade secrets until Confidential Information is no longer considered a trade secret under applicable laws."
+          "label": "{years} from Effective Date, but in the case of trade secrets until Confidential Information is no longer considered a trade secret under applicable laws.",
+          "formLabel": "year(s) from the effective date (trade secrets protected longer)"
         },
-        { "value": "perpetual", "label": "In perpetuity." }
+        {
+          "value": "perpetual",
+          "label": "In perpetuity.",
+          "formLabel": "In perpetuity"
+        }
       ],
       "prompt": "\"years\" for a fixed confidentiality period, \"perpetual\" for indefinitely."
     },
@@ -83,7 +96,10 @@
       "default": 1,
       "min": 1,
       "max": 99,
-      "dependsOn": { "field": "confidentialityTermKind", "value": "years" },
+      "dependsOn": {
+        "field": "confidentialityTermKind",
+        "value": "years"
+      },
       "prompt": "whole years, when confidentialityTermKind is \"years\"."
     },
     {
@@ -133,5 +149,6 @@
       "required": true,
       "prompt": "the company's legal entity name, the signatory's name and title, and a notice address (an email or a postal address)."
     }
-  ]
+  ],
+  "formSectionTitle": "Agreement details"
 }

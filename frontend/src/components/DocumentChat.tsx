@@ -2,23 +2,30 @@
 
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import { ApiError, sendChat } from "@/lib/api";
-import { GREETING, type ChatMessage, type NdaUpdates } from "@/lib/chat";
-import type { NdaData } from "@/lib/nda";
+import { GREETING, type ChatMessage, type DocumentUpdates } from "@/lib/chat";
+import type { DocumentData } from "@/lib/documents";
 
 /**
  * The drafting conversation.
  *
- * Owns the transcript; the agreement itself belongs to NdaCreator, which is
- * handed each turn's findings through `onUpdates`. A failed turn puts the
+ * Owns the transcript; the agreement itself belongs to DocumentCreator, which
+ * is handed each turn's findings through `onUpdates`. A failed turn puts the
  * message back in the composer rather than stranding it in the transcript, so
  * "send" is always the way to retry.
+ *
+ * While `documentType` is null the conversation is working out which agreement
+ * to draft; `onDocumentType` fires once it has.
  */
-export default function NdaChat({
+export default function DocumentChat({
+  documentType,
   data,
   onUpdates,
+  onDocumentType,
 }: {
-  data: NdaData;
-  onUpdates: (updates: NdaUpdates) => void;
+  documentType: string | null;
+  data: DocumentData;
+  onUpdates: (updates: DocumentUpdates) => void;
+  onDocumentType: (documentType: string) => void;
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     { role: "assistant", content: GREETING },
@@ -27,6 +34,7 @@ export default function NdaChat({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const transcript = useRef<HTMLDivElement>(null);
+  const composer = useRef<HTMLTextAreaElement>(null);
 
   // Keep the newest message in view as the conversation grows.
   useEffect(() => {
@@ -45,8 +53,10 @@ export default function NdaChat({
     setError(null);
 
     try {
-      const turn = await sendChat(asked, data);
+      const turn = await sendChat(asked, documentType, data);
       setMessages([...asked, { role: "assistant", content: turn.reply }]);
+
+      if (!documentType && turn.documentType) onDocumentType(turn.documentType);
       onUpdates(turn.updates);
     } catch (failure) {
       setMessages(messages);
@@ -58,6 +68,11 @@ export default function NdaChat({
       );
     } finally {
       setPending(false);
+      // Back to the composer, so a conversation is one uninterrupted stream of
+      // typing. The textarea is disabled while the turn is in flight, and a
+      // disabled element cannot hold focus, so this has to run after it is
+      // enabled again — hence the timeout rather than a bare focus() call.
+      setTimeout(() => composer.current?.focus(), 0);
     }
   }
 
@@ -94,13 +109,18 @@ export default function NdaChat({
 
       <form onSubmit={send} className="mt-3 flex items-end gap-2">
         <textarea
+          ref={composer}
           rows={2}
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={onKeyDown}
           disabled={pending}
           aria-label="Message"
-          placeholder="Tell me about the agreement…"
+          placeholder={
+            documentType
+              ? "Tell me about the agreement…"
+              : "Tell me what you need to draft…"
+          }
           className="w-full flex-1 resize-none rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm transition outline-none placeholder:text-slate-400 focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/20 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-brand-blue"
         />
         <button

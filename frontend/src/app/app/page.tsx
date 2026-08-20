@@ -1,28 +1,41 @@
 import type { Metadata } from "next";
-import NdaCreator from "@/components/NdaCreator";
+import DocumentCreator from "@/components/DocumentCreator";
 import RequireSession from "@/components/RequireSession";
 import StandardTerms from "@/components/StandardTerms";
-import { readMutualNdaStandardTerms } from "@/lib/templates";
+import { readDocumentSchemas, readUsStates } from "@/lib/documents.server";
+import { readStandardTerms } from "@/lib/templates";
 
 export const metadata: Metadata = {
-  title: "Mutual NDA creator — Prelegal",
+  title: "Agreement creator — Prelegal",
   description:
-    "Fill in a short form and get a complete, signable Mutual Non-Disclosure Agreement you can download.",
+    "Talk through what you need and get a complete, signable legal agreement you can download.",
 };
 
 /**
- * The Mutual NDA creator (PL-3), behind the sign-in screen.
+ * The agreement creator (PL-6), behind the sign-in screen.
  *
- * The Standard Terms are read from the repo's template dataset and rendered
- * here, on the server, then handed to the client component as an element. Only
- * the Cover Page reacts to form input.
+ * Every agreement's Standard Terms are read from the repo's template dataset
+ * and rendered here, on the server, then handed to the client component as
+ * elements. All of them, not just the one in use: the page is statically
+ * exported, so there is no server left by the time the user picks one. Only
+ * the Cover Page reacts to what the conversation learns.
  */
 export default function CreatorPage() {
-  const standardTerms = readMutualNdaStandardTerms();
+  const schemas = readDocumentSchemas();
+  const standardTerms = Object.fromEntries(
+    schemas.map((schema) => [
+      schema.documentType,
+      <StandardTerms key={schema.documentType} markdown={readStandardTerms(schema.templateFile)} />,
+    ]),
+  );
 
   return (
     <RequireSession>
-      <NdaCreator standardTerms={<StandardTerms markdown={standardTerms} />} />
+      <DocumentCreator
+        schemas={schemas}
+        usStates={readUsStates()}
+        standardTerms={standardTerms}
+      />
     </RequireSession>
   );
 }

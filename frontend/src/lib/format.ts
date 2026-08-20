@@ -1,4 +1,9 @@
-import type { NdaData } from "./nda";
+/**
+ * Turning stored values into the words a legal document uses.
+ *
+ * The readiness banner's list of what is still missing lives in
+ * `documents.ts`, with the schema it is derived from.
+ */
 
 /**
  * Renders an ISO date (yyyy-mm-dd) the way a US legal document spells one out,
@@ -29,31 +34,14 @@ export function pluralYears(years: number): string {
   return `${years} ${years === 1 ? "year" : "years"}`;
 }
 
-/**
- * Human-readable labels for every field still needed before the agreement is
- * ready to sign. Drives the readiness banner above the preview; the document
- * itself always renders, showing placeholders in place of missing values.
- */
-export function missingFieldLabels(data: NdaData): string[] {
-  const missing: string[] = [];
-  const require = (label: string, value: string) => {
-    if (!value.trim()) missing.push(label);
-  };
+/** Formats a Date as the yyyy-mm-dd value an <input type="date"> expects. */
+export function toDateInputValue(date: Date): string {
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
 
-  require("Purpose", data.purpose);
-  require("Effective Date", data.effectiveDate);
-  require("Governing Law", data.governingLaw);
-  require("Jurisdiction", data.jurisdiction);
-
-  for (const [name, party] of [
-    ["Party 1", data.partyOne],
-    ["Party 2", data.partyTwo],
-  ] as const) {
-    require(`${name} company`, party.company);
-    require(`${name} print name`, party.signatoryName);
-    require(`${name} title`, party.signatoryTitle);
-    require(`${name} notice address`, party.noticeAddress);
-  }
-
-  return missing;
+/** Today in the viewer's own time zone, as a date-input value. */
+export function todayInputValue(): string {
+  return toDateInputValue(new Date());
 }
