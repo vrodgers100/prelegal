@@ -24,6 +24,7 @@ from datetime import date
 from typing import Any, Literal
 
 from pydantic import BaseModel
+from pydantic.alias_generators import to_snake
 
 from . import openrouter
 from .document_schema import (
@@ -145,7 +146,7 @@ def outstanding(spec: DocumentSpec, fields: BaseModel) -> list[str]:
     for field in spec.fields:
         if not field.required:
             continue
-        value = getattr(fields, _snake(field.key), None)
+        value = getattr(fields, to_snake(field.key), None)
 
         if field.type == "party":
             missing += [
@@ -157,11 +158,6 @@ def outstanding(spec: DocumentSpec, fields: BaseModel) -> list[str]:
             missing.append(f"the {field.label.lower()}")
 
     return missing
-
-
-def _snake(key: str) -> str:
-    """camelCase field key to the attribute name Python holds it under."""
-    return "".join(f"_{char.lower()}" if char.isupper() else char for char in key)
 
 
 def _party_rule(spec: DocumentSpec) -> str:

@@ -120,6 +120,27 @@ describe("withToday", () => {
 
     expect(withToday(nda, data, "")).toBe(data);
   });
+
+  it("leaves an optional date alone", () => {
+    // A Cloud Service Agreement has a required Effective Date and an optional
+    // Order Date. Dating the optional one would put a date nobody chose into a
+    // signed document, and — since this runs on every render — would refill the
+    // field the instant the user cleared it.
+    const csa = byType("cloud-service-agreement");
+    const dated = withToday(csa, createEmptyDocument(csa), "2026-08-20");
+
+    expect(dated.effectiveDate).toBe("2026-08-20");
+    expect(dated.orderDate).toBe("");
+  });
+
+  it("lets a cleared optional date stay cleared", () => {
+    const csa = byType("cloud-service-agreement");
+    const dated = withToday(csa, createEmptyDocument(csa), "2026-08-20");
+
+    const cleared = withToday(csa, { ...dated, orderDate: "" }, "2026-08-20");
+
+    expect(cleared.orderDate).toBe("");
+  });
 });
 
 describe("missingFieldLabels", () => {

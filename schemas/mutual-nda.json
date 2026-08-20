@@ -4,7 +4,6 @@
   "shortName": "Mutual NDA",
   "description": "Protects confidential information both parties share while exploring or running a business relationship.",
   "templateFile": "mutual-nda.md",
-  "standardTermsName": "Common Paper Mutual NDA Standard Terms Version 1.0",
   "coverPage": {
     "title": "Mutual Non-Disclosure Agreement",
     "usingHeading": "Using this Mutual Non-Disclosure Agreement",

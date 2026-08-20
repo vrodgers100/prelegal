@@ -143,6 +143,11 @@ export function createEmptyDocument(schema: DocumentSchema): DocumentData {
  *
  * An unset date means today, so a fresh document (and a cleared one) starts
  * out dated correctly without storing a date the user never chose.
+ *
+ * Required dates only. An optional one — a Cloud Service Agreement's Order
+ * Date, say — means "not set", and defaulting it would both write a date
+ * nobody chose into a signed document and make the field impossible to clear,
+ * since this runs again on every render and would immediately refill it.
  */
 export function withToday(
   schema: DocumentSchema,
@@ -150,7 +155,10 @@ export function withToday(
   today: string,
 ): DocumentData {
   const undated = schema.fields.filter(
-    (field) => field.type === "date" && !String(data[field.key] ?? "").trim(),
+    (field) =>
+      field.type === "date" &&
+      field.required &&
+      !String(data[field.key] ?? "").trim(),
   );
   if (undated.length === 0 || !today) return data;
 

@@ -3,7 +3,7 @@ import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 
 /**
- * The Mutual NDA Standard Terms, rendered verbatim from the repo's template
+ * An agreement's Standard Terms, rendered verbatim from the repo's template
  * markdown. Rendered on the server so the markdown parser stays out of the
  * client bundle — the terms never change in response to user input.
  *

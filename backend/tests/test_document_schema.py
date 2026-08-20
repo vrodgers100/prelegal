@@ -6,7 +6,9 @@ from one is the model the language model is actually handed.
 """
 
 import pytest
+from pydantic.alias_generators import to_camel, to_snake
 
+from prelegal import chat
 from prelegal.document_schema import (
     DOCUMENTS,
     US_STATES,
@@ -67,6 +69,30 @@ def test_the_states_are_the_ones_a_governing_law_field_expects():
     assert "District of Columbia" in US_STATES
 
 
+@pytest.mark.parametrize("document_type", sorted(DOCUMENTS))
+def test_every_field_key_survives_the_round_trip(document_type):
+    """A key the aliases do not invert is a field that silently never fills in.
+
+    The browser sends camelCase, Pydantic holds snake_case, and the alias has
+    to turn it back into the same camelCase the browser used. Most keys manage
+    that without anyone thinking about it, which is exactly why a key that does
+    not would go unnoticed until a field mysteriously stayed empty.
+    """
+    model = fields_model(document_type)
+
+    for field in DOCUMENTS[document_type].fields:
+        attribute = to_snake(field.key)
+
+        assert to_camel(attribute) == field.key, f"{field.key} does not round-trip"
+        assert hasattr(model(), attribute)
+        assert model.model_validate({field.key: None}) is not None
+
+
+def test_the_assistant_has_a_word_for_every_part_of_a_party():
+    """A party detail with no label is one the assistant can never ask for."""
+    assert set(chat.PARTY_LABELS) == set(Party.model_fields)
+
+
 class TestFieldsModel:
     """The Pydantic model built from a schema."""
 
@@ -95,12 +121,8 @@ class TestFieldsModel:
         model = fields_model(document_type)
 
         assert set(model.model_fields) == {
-            _snake(field.key) for field in DOCUMENTS[document_type].fields
+            to_snake(field.key) for field in DOCUMENTS[document_type].fields
         }
-
-
-def _snake(key: str) -> str:
-    return "".join(f"_{char.lower()}" if char.isupper() else char for char in key)
 
 
 class TestStrictSchema:

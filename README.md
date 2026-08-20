@@ -1,6 +1,7 @@
 # prelegal
 
-A platform for drafting pre-legal agreements from vetted templates.
+A platform for drafting pre-legal agreements from vetted templates. Say what you
+need and an assistant works out which agreement fits, then fills it in with you.
 
 ## Status: In progress
 
@@ -44,6 +45,7 @@ Then open <http://localhost:8000>. Use the matching `stop-*` script to shut down
 | `backend/` | FastAPI app (uv project). Serves `/api` and hosts the frontend. |
 | `frontend/` | Next.js app, statically exported at build time. |
 | `templates/` | Common Paper agreement templates, the source of all wording. |
+| `schemas/` | One JSON file per agreement, describing the fields its cover page needs. |
 | `catalog.json` | Index of the available templates. |
 | `scripts/` | Start and stop scripts per platform. |
 
