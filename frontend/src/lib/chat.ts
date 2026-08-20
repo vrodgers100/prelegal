@@ -30,11 +30,14 @@ export interface ChatMessage {
  *
  * It asks what to draft rather than assuming: Prelegal drafts eleven
  * agreements, and which one it is comes out of the conversation.
+ *
+ * It used to name three of them as the ones people ask for most, which was
+ * true and unhelpful — the catalogue now sits directly underneath, so naming
+ * three of eleven only suggests the other eight are not on offer.
  */
 export const GREETING =
-  "Hi — I can help you put together a legal agreement. What do you need to " +
-  "draft? An NDA, a pilot agreement, and a services agreement are the ones " +
-  "people ask for most.";
+  "Hi — I can help you put together a legal agreement. Tell me what you need " +
+  "in your own words, or pick one from the list below.";
 
 /** A field the assistant did not learn comes back null. */
 type Learned<T> = T | null | undefined;

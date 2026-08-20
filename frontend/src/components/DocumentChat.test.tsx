@@ -6,7 +6,8 @@ import { GREETING, type DocumentUpdates } from "@/lib/chat";
 import { createEmptyDocument } from "@/lib/documents";
 import { readDocumentSchemas } from "@/lib/documents.server";
 
-const nda = readDocumentSchemas().find((s) => s.documentType === "mutual-nda")!;
+const SCHEMAS = readDocumentSchemas();
+const nda = SCHEMAS.find((s) => s.documentType === "mutual-nda")!;
 const NDA = { ...createEmptyDocument(nda), effectiveDate: "2026-08-19" };
 
 function stubFetch(status: number, body: unknown) {
@@ -34,6 +35,7 @@ function renderChat(
   render(
     <DocumentChat
       documentType={documentType}
+      schemas={SCHEMAS}
       data={NDA}
       onUpdates={onUpdates}
       onDocumentType={onDocumentType}
@@ -250,6 +252,80 @@ describe("DocumentChat", () => {
 
       await waitFor(() => expect(screen.getByText("Noted.")).toBeInTheDocument());
       expect(onDocumentType).not.toHaveBeenCalled();
+    });
+
+    it("shows all eleven agreements to pick from", () => {
+      // Asking used to be the only way to find out what Prelegal drafts.
+      renderChat({ documentType: null });
+
+      const catalogue = within(screen.getByLabelText("Conversation"));
+      expect(catalogue.getAllByRole("button")).toHaveLength(SCHEMAS.length);
+      expect(SCHEMAS).toHaveLength(11);
+      expect(catalogue.getByText("Pilot Agreement")).toBeInTheDocument();
+      expect(catalogue.getByText("Design Partner Agreement")).toBeInTheDocument();
+    });
+
+    it("opens the agreement that was picked, without waiting on the API", async () => {
+      // The document has to appear even when the assistant cannot be reached,
+      // or an unconfigured deployment has no way into the review form at all.
+      stubFetch(503, { detail: "The drafting assistant is not configured." });
+      const { onDocumentType, user } = renderChat({ documentType: null });
+
+      await user.click(screen.getByRole("button", { name: /Pilot Agreement/ }));
+
+      expect(onDocumentType).toHaveBeenCalledWith("pilot-agreement");
+    });
+
+    it("says in the conversation what was picked", async () => {
+      const fetchMock = stubFetch(200, turn("Who is the provider?", {}, "pilot-agreement"));
+      const { user } = renderChat({ documentType: null });
+
+      await user.click(screen.getByRole("button", { name: /Pilot Agreement/ }));
+
+      await waitFor(() => expect(fetchMock).toHaveBeenCalled());
+      const body = JSON.parse(fetchMock.mock.calls[0][1].body as string);
+      expect(body.messages.at(-1)).toEqual({
+        role: "user",
+        content: "I need a Pilot Agreement.",
+      });
+      // Sent against the agreement just picked, not the null it replaced.
+      expect(body.documentType).toBe("pilot-agreement");
+    });
+
+    it("puts the catalogue away once an agreement is open", () => {
+      renderChat({ documentType: "mutual-nda" });
+
+      const transcript = within(screen.getByLabelText("Conversation"));
+      expect(transcript.queryByText("Design Partner Agreement")).not.toBeInTheDocument();
+    });
+
+    it("changes the agreement when the user asks for a different one", async () => {
+      // The reported fault: the preview stayed on the NDA however plainly the
+      // user asked for something else.
+      stubFetch(200, turn("A pilot agreement it is.", {}, "pilot-agreement"));
+      const { onDocumentType, user } = renderChat({ documentType: "mutual-nda" });
+
+      await say(user, "Actually, make it a pilot agreement.");
+
+      await waitFor(() =>
+        expect(onDocumentType).toHaveBeenCalledWith("pilot-agreement"),
+      );
+    });
+
+    it("merges nothing into an agreement it is leaving behind", async () => {
+      // Those fields are keyed to the old schema; the new document starts empty.
+      stubFetch(
+        200,
+        turn("A pilot agreement it is.", { governingLaw: "Delaware" }, "pilot-agreement"),
+      );
+      const { onUpdates, onDocumentType, user } = renderChat({
+        documentType: "mutual-nda",
+      });
+
+      await say(user, "Actually, make it a pilot agreement.");
+
+      await waitFor(() => expect(onDocumentType).toHaveBeenCalled());
+      expect(onUpdates).not.toHaveBeenCalled();
     });
   });
 });

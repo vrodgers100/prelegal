@@ -13,12 +13,18 @@ moments earlier, which is the most irritating thing a chat can do.
 
 Choosing the agreement is the same shape of turn with a smaller schema: decide
 which document is wanted, then reply knowing what was decided. It runs while
-the browser has no document yet, so a turn is always two calls, never three.
+the browser has no document yet.
+
+Once a document is open the same decision is asked again on every turn, so that
+"actually, make it a pilot agreement" is heard rather than answered as if it
+were an NDA question. It reads the same transcript as the extraction and needs
+nothing from it, so the two run together: three calls, still two round trips.
 
 Nothing is remembered between turns: the browser owns the document and sends it
 back with every message.
 """
 
+import asyncio
 import json
 from datetime import date
 from typing import Any, Literal
@@ -226,17 +232,34 @@ def extract_prompt(
 async def respond(
     messages: list[dict[str, str]], spec: DocumentSpec, fields: BaseModel
 ) -> ChatTurn:
-    """Answers the latest message and reports whatever fields it learned."""
+    """Answers the latest message and reports whatever fields it learned.
+
+    Asking for a different agreement is answered before anything else: the
+    fields just extracted belong to the document being left behind, so they are
+    dropped rather than merged into the new one.
+    """
     history = messages[-MAX_HISTORY:]
     model = fields_model(spec.document_type)
 
-    extracted = await openrouter.structured_completion(
-        [{"role": "system", "content": extract_prompt(spec, fields)}, *history],
-        strict_schema(model),
-        f"{spec.document_type.replace('-', '_')}_fields",
+    change, extracted = await asyncio.gather(
+        reconsider(history, spec),
+        openrouter.structured_completion(
+            [{"role": "system", "content": extract_prompt(spec, fields)}, *history],
+            strict_schema(model),
+            f"{spec.document_type.replace('-', '_')}_fields",
+        ),
     )
-    updates = model.model_validate(extracted)
 
+    if change is not None:
+        reply = await openrouter.completion(
+            [{"role": "system", "content": select_talk_prompt(change)}, *history]
+        )
+        return ChatTurn(
+            reply=reply.strip(),
+            document_type=change.document_type or spec.document_type,
+        )
+
+    updates = model.model_validate(extracted)
     reply = await openrouter.completion(
         [{"role": "system", "content": talk_prompt(spec, fields, updates)}, *history]
     )
@@ -257,6 +280,12 @@ DocumentId = Literal[tuple(DOCUMENTS)]
 class DocumentChoice(CamelModel):
     """Which agreement the user wants, or the nearest one to what they asked."""
 
+    #: What the user asked to draft, in their own words, or null if they have
+    #: not asked for anything. First because the fields are decoded in order
+    #: and the model has to say what it heard before it can place it: with the
+    #: two ids alone, a request for a document Prelegal does not draft came
+    #: back as two nulls rather than a nearest match, 6 times in 6.
+    asked_for: str | None = None
     #: Null until the user has said enough to be sure.
     document_type: DocumentId | None = None
     #: Set instead of `document_type` when nothing in the catalogue fits.
@@ -271,10 +300,36 @@ These are the only agreements Prelegal can draft:
 
 Rules:
 - Set documentType only when the user has made clear which one they want.
+- Asking what Prelegal can draft, asking for the list, or asking which one \
+they need is a question, not a choice. Leave both fields null and let the \
+reply answer them.
 - If they describe a document that is not on the list, leave documentType null \
 and set nearestMatch to whichever listed agreement comes closest.
 - If they have not said what they want yet, leave both null.
 - Never answer with a document that is not on the list.
+"""
+
+SWITCH_PROMPT = """\
+The user is part-way through drafting a {name}. Decide whether their latest \
+message asks to draft a different agreement instead.
+
+These are the only agreements Prelegal can draft:
+{catalogue}
+
+Judge the latest message only. Set askedFor to the document it asks you to \
+draft, in the user's own words, or null if it asks for no new document. Then \
+decide which of three things the message is:
+
+1. It carries on with the {name}: answering a question about it, correcting a \
+value in it, or mentioning another document in passing. Leave documentType and \
+nearestMatch null.
+2. It asks to draft one of the agreements above instead. Set documentType to \
+that agreement.
+3. It asks to draft some other kind of document, one not on the list above. \
+Leave documentType null and set nearestMatch to whichever listed agreement \
+comes closest to it.
+
+Never answer with a document that is not on the list.
 """
 
 SELECT_TALK_PROMPT = """\
@@ -283,9 +338,13 @@ no others:
 {catalogue}
 
 How to write:
-- One to three short sentences of plain prose. No markdown, no headings, no \
-bullet lists, and never JSON.
-- Never list every agreement. Name at most three.
+- One to three short sentences of plain prose. No markdown, no headings and \
+never JSON.
+- Name at most three agreements as examples, so an ordinary answer stays short.
+- The one exception: when the user asks what Prelegal can draft, asks for the \
+list, or asks which one they need, tell them all of it. Every agreement above, \
+one short line each, named and said what it is for. Refusing the list, or \
+naming three of eleven, leaves them thinking Prelegal drafts three documents.
 
 {instruction}
 """
@@ -304,7 +363,9 @@ use it.\
 
 _UNDECIDED = """\
 The user has not said which agreement they want. Ask them what they need to \
-put together, and name two or three of the agreements above as examples.\
+put together, and name two or three of the agreements above as examples. If \
+they asked what Prelegal can draft, asked for the list, or asked which one \
+they need, list all of them first and then ask.\
 """
 
 
@@ -339,6 +400,38 @@ def select_talk_prompt(choice: DocumentChoice) -> str:
         instruction = _UNDECIDED
 
     return SELECT_TALK_PROMPT.format(catalogue=catalogue(), instruction=instruction)
+
+
+def switch_prompt(spec: DocumentSpec) -> str:
+    """Instructions for the call that asks whether the agreement has changed."""
+    return SWITCH_PROMPT.format(name=spec.name, catalogue=catalogue())
+
+
+async def reconsider(
+    messages: list[dict[str, str]], spec: DocumentSpec
+) -> DocumentChoice | None:
+    """Whether the user has just asked for a different agreement, or nothing.
+
+    Without this a drafting turn can only answer about the document it was
+    handed, so "actually, make it a pilot agreement" came back as another
+    question about the NDA, 3 times in 3.
+
+    A choice naming the document already open is not a change, and neither is a
+    nearest match for it. Both mean the conversation is simply carrying on.
+    """
+    answer = await openrouter.structured_completion(
+        [{"role": "system", "content": switch_prompt(spec)}, *messages],
+        strict_schema(DocumentChoice),
+        "document_choice",
+    )
+    choice = DocumentChoice.model_validate(answer)
+
+    if choice.document_type:
+        if choice.document_type != spec.document_type:
+            return DocumentChoice(document_type=choice.document_type)
+    elif choice.nearest_match and choice.nearest_match != spec.document_type:
+        return DocumentChoice(nearest_match=choice.nearest_match)
+    return None
 
 
 async def select_document(messages: list[dict[str, str]]) -> ChatTurn:

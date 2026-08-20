@@ -5,7 +5,7 @@ from datetime import date
 import pytest
 
 from prelegal import chat, openrouter
-from prelegal.document_schema import DOCUMENTS, fields_model
+from prelegal.document_schema import DOCUMENTS, fields_model, strict_schema
 
 NDA = DOCUMENTS["mutual-nda"]
 NdaFields = fields_model("mutual-nda")
@@ -142,14 +142,22 @@ class TestOutstanding:
 
 
 class TestRespond:
-    """A turn extracts first, then writes a reply that knows what was found."""
+    """A turn extracts and reconsiders, then writes a reply knowing both."""
 
     @pytest.fixture
     def calls(self, monkeypatch):
-        """Records both calls and answers them with fixed content."""
-        recorded = {}
+        """Records every call and answers it with fixed content.
+
+        The two structured calls are told apart by their schema name: the
+        extraction and the "is this still the right document" question run
+        together and either may land first.
+        """
+        recorded = {"choice": {}}
 
         async def structured(messages, schema, name):
+            if name == "document_choice":
+                recorded["reconsider"] = messages
+                return recorded["choice"]
             recorded["extract"] = messages
             return {"governingLaw": "Delaware"}
 
@@ -206,6 +214,131 @@ class TestRespond:
         assert len(sent) == chat.MAX_HISTORY
         assert sent[-1]["content"] == f"message {chat.MAX_HISTORY + 9}"
 
+    @pytest.mark.anyio
+    async def test_carries_on_with_the_same_agreement_by_default(self, calls):
+        """The usual turn: nothing about the document has changed."""
+        turn = await chat.respond(
+            [{"role": "user", "content": "Delaware law."}], NDA, NdaFields()
+        )
+
+        assert turn.document_type == "mutual-nda"
+        assert turn.updates["governingLaw"] == "Delaware"
+
+    @pytest.mark.anyio
+    async def test_changes_the_agreement_when_the_user_asks_for_another(self, calls):
+        """The reported fault: the preview never followed the conversation."""
+        calls["choice"] = {"documentType": "pilot-agreement"}
+
+        turn = await chat.respond(
+            [{"role": "user", "content": "Actually, make it a pilot agreement."}],
+            NDA,
+            NdaFields(),
+        )
+
+        assert turn.document_type == "pilot-agreement"
+        assert "Pilot Agreement" in calls["talk"][0]["content"]
+
+    @pytest.mark.anyio
+    async def test_drops_fields_extracted_for_the_agreement_being_left(self, calls):
+        """They are keyed to the old schema, so they cannot follow the user."""
+        calls["choice"] = {"documentType": "pilot-agreement"}
+
+        turn = await chat.respond(
+            [{"role": "user", "content": "Actually, make it a pilot agreement."}],
+            NDA,
+            NdaFields(),
+        )
+
+        assert turn.updates == {}
+
+    @pytest.mark.anyio
+    async def test_offers_the_nearest_match_for_something_not_drafted(self, calls):
+        calls["choice"] = {"nearestMatch": "professional-services-agreement"}
+
+        turn = await chat.respond(
+            [{"role": "user", "content": "Can you do an employment contract?"}],
+            NDA,
+            NdaFields(),
+        )
+
+        assert turn.document_type == "mutual-nda"
+        assert "cannot draft what the user asked for" in calls["talk"][0]["content"]
+
+    @pytest.mark.anyio
+    async def test_reconsiders_from_the_same_transcript_as_the_extraction(self, calls):
+        history = [{"role": "user", "content": "Delaware law."}]
+
+        await chat.respond(history, NDA, NdaFields())
+
+        assert calls["reconsider"][1:] == history
+        assert "part-way through drafting" in calls["reconsider"][0]["content"]
+
+
+class TestReconsider:
+    """A turn only changes the agreement when the user asks it to."""
+
+    def _answer(self, monkeypatch, choice):
+        async def structured(messages, schema, name):
+            return choice
+
+        monkeypatch.setattr(openrouter, "structured_completion", structured)
+
+    @pytest.mark.anyio
+    async def test_hears_nothing_when_the_conversation_carries_on(self, monkeypatch):
+        self._answer(monkeypatch, {})
+
+        assert await chat.reconsider([], NDA) is None
+
+    @pytest.mark.anyio
+    async def test_ignores_a_choice_naming_the_document_already_open(self, monkeypatch):
+        """Every NDA turn's transcript still says "I need an NDA"."""
+        self._answer(monkeypatch, {"documentType": "mutual-nda"})
+
+        assert await chat.reconsider([], NDA) is None
+
+    @pytest.mark.anyio
+    async def test_ignores_a_nearest_match_for_the_document_already_open(
+        self, monkeypatch
+    ):
+        self._answer(monkeypatch, {"nearestMatch": "mutual-nda"})
+
+        assert await chat.reconsider([], NDA) is None
+
+    @pytest.mark.anyio
+    async def test_reports_a_different_agreement(self, monkeypatch):
+        self._answer(monkeypatch, {"documentType": "pilot-agreement"})
+
+        change = await chat.reconsider([], NDA)
+
+        assert change.document_type == "pilot-agreement"
+
+    @pytest.mark.anyio
+    async def test_reports_a_nearest_match_for_something_not_drafted(self, monkeypatch):
+        self._answer(monkeypatch, {"nearestMatch": "pilot-agreement"})
+
+        change = await chat.reconsider([], NDA)
+
+        assert change.document_type is None
+        assert change.nearest_match == "pilot-agreement"
+
+    def test_says_what_was_asked_for_before_placing_it(self):
+        """Strict decoding fills the fields in order, so the order matters.
+
+        With the two ids alone, a request for a document Prelegal does not
+        draft came back as two nulls instead of a nearest match.
+        """
+        assert list(strict_schema(chat.DocumentChoice)["properties"]) == [
+            "askedFor",
+            "documentType",
+            "nearestMatch",
+        ]
+
+    def test_the_switch_prompt_names_the_document_in_hand(self):
+        prompt = chat.switch_prompt(NDA)
+
+        assert "part-way through drafting a Mutual Non-Disclosure Agreement" in prompt
+        assert "pilot-agreement" in prompt
+
 
 class TestSelectPrompts:
     """Choosing which agreement to draft."""
@@ -233,6 +366,20 @@ class TestSelectPrompts:
         assert "cannot draft what the user asked for" in prompt
         assert "closest thing" in prompt
         assert "Mutual Non-Disclosure Agreement" in prompt
+
+    def test_a_question_about_the_catalogue_is_not_a_choice(self):
+        """Asked "what are my options?", it used to open an NDA on the user."""
+        assert "is a question, not a choice" in chat.select_prompt()
+
+    def test_the_reply_may_list_every_agreement_when_asked_for_it(self):
+        """It used to refuse, saying it could not provide the whole catalogue."""
+        prompt = chat.select_talk_prompt(chat.DocumentChoice())
+
+        assert "asks for the list" in prompt
+        assert "Every agreement above, one short line each" in prompt
+        # All eleven have to be in front of it before it can list them.
+        assert all(document_type in prompt for document_type in chat.DOCUMENTS)
+        assert len(chat.DOCUMENTS) == 11
 
     def test_an_undecided_user_is_asked_what_they_need(self):
         prompt = chat.select_talk_prompt(chat.DocumentChoice())
